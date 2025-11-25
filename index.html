@@ -32,8 +32,9 @@
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Inputs legibles: Fondo blanco, texto negro */
         .dark-input {
-            @apply w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-[#0DA4BF] focus:border-transparent outline-none transition;
+            @apply w-full p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#0DA4BF] focus:border-transparent outline-none transition font-medium;
         }
     </style>
 </head>
@@ -58,77 +59,341 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true }); // Para compatibilidad en entornos en vivo
-        firebase.firestore.setLogLevel('debug'); // Para ver logs de firestore
+        db.settings({ experimentalForceLongPolling: true }); 
+        firebase.firestore.setLogLevel('silent');
 
         // ---------------------------------------------------------
-        // 2. DATOS (INCLUYE SUPERVISOR)
+        // 2. DATOS (Cuidadores vinculados a Pacientes)
         // ---------------------------------------------------------
         
         const CAREGIVERS = [
-            // Nuevo usuario supervisor
+            // Supervisor
             { name: "Mario Ulises Vallejo Navarrete", pin: "0000", isSupervisor: true }, 
-            { name: "Ana Martínez", pin: "1111" },
-            { name: "Carlos Velázquez", pin: "2222" },
-            { name: "Beatriz Solís", pin: "3333" },
-            { name: "David López", pin: "4444" },
-            { name: "Elena Ramírez", pin: "5555" },
-            { name: "Fernando Ruiz", pin: "9999" }
+            
+            // Cuidadores y Asignaciones
+            { name: "Ana Martínez", pin: "1111", assignedPatientId: "p1" },
+            { name: "Carlos Velázquez", pin: "2222", assignedPatientId: "p2" },
+            { name: "Beatriz Solís", pin: "3333", assignedPatientId: "p3" },
+            { name: "David López", pin: "4444", assignedPatientId: "p4" },
+            { name: "Elena Ramírez", pin: "5555", assignedPatientId: "p5" },
+            { name: "Fernando Ruiz", pin: "9999", assignedPatientId: "p6" },
+            { name: "Gabriela Torres", pin: "1010", assignedPatientId: "p7" },
+            { name: "Héctor Jiménez", pin: "2020", assignedPatientId: "p8" },
+            { name: "Isabel Castro", pin: "3030", assignedPatientId: "p9" },
+            { name: "Jorge Medina", pin: "4040", assignedPatientId: "p10" },
+            { name: "Karla Orozco", pin: "5050", assignedPatientId: "p11" },
+            { name: "Luis Navarro", pin: "6060", assignedPatientId: "p12" },
+            // Apoyo / Cubreturnos
+            { name: "Mónica Pineda", pin: "7070", assignedPatientId: "p1" }, 
+            { name: "Néstor Vargas", pin: "8080", assignedPatientId: "p2" }, 
+            { name: "Olivia Rivas", pin: "9090", assignedPatientId: "p3" },  
+            { name: "Pablo Estévez", pin: "1234", assignedPatientId: "p4" }   
         ];
 
+        // DATOS ACTUALIZADOS CON RUTINAS DE 12 HORAS
         const PATIENTS = [
             {
                 id: 'p1', 
                 name: "Don Roberto", 
-                condition: "Diabetes Mellitus T2 / Hipertensión",
-                info: {
-                    address: "Calle Roble #123, Col. Centro, Uriangato",
-                    emergency: "Hijo: Luis (Cel: 445-555-9876)",
-                    age: "78 años", weight: "82 kg", bloodType: "O+",
-                    allergies: "Penicilina", doctor: "Dr. H. Gtz (445-555-0123)",
-                    diet: "Diabética estricta (baja en sodio/azúcar)"
-                },
+                condition: "Diabetes T2 / Hipertensión",
+                info: { address: "Calle Roble #123", emergency: "Hijo: Luis (445-555-9876)", age: "78", weight: "82kg", bloodType: "O+", allergies: "Penicilina", doctor: "Dr. Gtz", diet: "Diabética" },
                 tasks: {
                     dia: [ 
-                        { id: 't_am_1', text: "07:00 - Toma de Glucosa en ayunas", type: "vital" },
-                        { id: 't_am_2', text: "07:15 - Insulina NPH (según esquema)", type: "med" },
-                        { id: 't_am_3', text: "08:00 - Desayuno", type: "food" },
-                        { id: 't_am_4', text: "09:00 - Losartán 50mg", type: "med" },
-                        { id: 't_am_6', text: "12:00 - Toma de Presión Arterial", type: "vital" },
-                        { id: 't_am_7', text: "14:00 - Comida Principal", type: "food" }
+                        { id: 'p1_d1', text: "07:00 - Toma de Glucosa en ayunas", type: "vital" },
+                        { id: 'p1_d2', text: "07:30 - Insulina NPH / Medicamentos AM", type: "med" },
+                        { id: 'p1_d3', text: "08:30 - Desayuno completo", type: "food" },
+                        { id: 'p1_d4', text: "10:00 - Baño de regadera y humectación", type: "hygiene" },
+                        { id: 'p1_d5', text: "12:00 - Colación matutina y Toma de PA", type: "food" },
+                        { id: 'p1_d6', text: "14:00 - Comida principal", type: "food" },
+                        { id: 'p1_d7', text: "16:00 - Caminata 20 min (si el clima permite)", type: "physio" },
+                        { id: 'p1_d8', text: "18:00 - Merienda ligera", type: "food" }
                     ],
                     noche: [ 
-                        { id: 't_pm_1', text: "19:00 - Cena ligera", type: "food" },
-                        { id: 't_pm_2', text: "20:00 - Toma de Glucosa post-pandrial", type: "vital" },
-                        { id: 't_pm_3', text: "21:00 - Insulina Glargina", type: "med" },
-                        { id: 't_pm_4', text: "22:00 - Aseo dental y cambio de pañal", type: "hygiene" },
-                        { id: 't_pm_5', text: "00:00 - Ronda de sueño / Monitoreo", type: "check" }
+                        { id: 'p1_n1', text: "19:00 - Cena ligera", type: "food" },
+                        { id: 'p1_n2', text: "20:00 - Glucosa post-pandrial y Signos", type: "vital" },
+                        { id: 'p1_n3', text: "21:00 - Insulina Glargina y Meds Nocturnos", type: "med" },
+                        { id: 'p1_n4', text: "22:00 - Aseo dental y preparación cama", type: "hygiene" },
+                        { id: 'p1_n5', text: "00:00 - Ronda de monitoreo sueño", type: "check" },
+                        { id: 'p1_n6', text: "03:00 - Ronda de monitoreo / Ida al baño", type: "check" },
+                        { id: 'p1_n7', text: "06:00 - Preparar insumos glucosa AM", type: "check" }
                     ]
                 }
             },
             {
                 id: 'p2', 
                 name: "Sra. Elena", 
-                condition: "Post-Op Fractura de Cadera / EPOC",
-                info: {
-                    address: "Av. Morelos #45 Int 2, Moroleón",
-                    emergency: "Hija: Clara (Cel: 445-555-1122)",
-                    age: "84 años", weight: "60 kg", bloodType: "A-",
-                    allergies: "Ninguna conocida", doctor: "Dra. Salas (Trauma)",
-                    diet: "Alta en fibra y proteínas"
-                },
+                condition: "Post-Op Cadera / EPOC",
+                info: { address: "Av. Morelos #45", emergency: "Hija: Clara (445-555-1122)", age: "84", weight: "60kg", bloodType: "A-", allergies: "Ninguna", doctor: "Dra. Salas", diet: "Alta fibra" },
                 tasks: {
                     dia: [
-                        { id: 'e_am_1', text: "08:00 - Nebulización (Combivent)", type: "med" },
-                        { id: 'e_am_2', text: "09:00 - Baño de esponja (cuidar herida)", type: "hygiene" },
-                        { id: 'e_am_3', text: "10:00 - Curación de herida quirúrgica", type: "cure" },
-                        { id: 'e_am_4', text: "12:00 - Ejercicios respiratorios", type: "physio" },
-                        { id: 'e_am_5', text: "14:00 - Medicamento para dolor (Tramadol)", type: "med" }
+                        { id: 'p2_d1', text: "08:00 - Nebulización Matutina y Signos", type: "med" },
+                        { id: 'p2_d2', text: "09:00 - Desayuno asistido", type: "food" },
+                        { id: 'p2_d3', text: "10:00 - Baño de esponja (cuidar apósito)", type: "hygiene" },
+                        { id: 'p2_d4', text: "11:00 - Curación herida quirúrgica", type: "cure" },
+                        { id: 'p2_d5', text: "13:00 - Ejercicios respiratorios / Espirómetro", type: "physio" },
+                        { id: 'p2_d6', text: "14:30 - Comida y Medicamento dolor", type: "food" },
+                        { id: 'p2_d7', text: "17:00 - Movilización a reposet", type: "physio" },
+                        { id: 'p2_d8', text: "18:30 - Nebulización Vespertina", type: "med" }
                     ],
                     noche: [
-                        { id: 'e_pm_1', text: "20:00 - Oxígeno suplementario (2L/min)", type: "med" },
-                        { id: 'e_pm_2', text: "22:00 - Revisión de saturación O2", type: "vital" },
-                        { id: 'e_pm_3', text: "23:00 - Colocar medias de compresión", type: "physio" }
+                        { id: 'p2_n1', text: "20:00 - Cena y Oxígeno (2L/min) continuo", type: "med" },
+                        { id: 'p2_n2', text: "22:00 - Aseo, Cambio Pañal, Medias compresión", type: "hygiene" },
+                        { id: 'p2_n3', text: "00:00 - Cambio de posición (Decúbito Lateral)", type: "physio" },
+                        { id: 'p2_n4', text: "02:00 - Revisión Saturación O2 y Pañal", type: "vital" },
+                        { id: 'p2_n5', text: "04:00 - Cambio de posición", type: "physio" },
+                        { id: 'p2_n6', text: "06:00 - Retirar medias y lubricar piel", type: "cure" }
+                    ]
+                }
+            },
+            {
+                id: 'p3',
+                name: "Don Jorge",
+                condition: "Parkinson Avanzado",
+                info: { address: "Calle Madero #88", emergency: "Esposa: Rosa (445-123-4567)", age: "75", weight: "70kg", bloodType: "B+", allergies: "Sulfa", doctor: "Dr. Neuro", diet: "Papilla" },
+                tasks: {
+                    dia: [
+                        { id: 'p3_d1', text: "07:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
+                        { id: 'p3_d2', text: "08:00 - Desayuno asistido (paciencia)", type: "food" },
+                        { id: 'p3_d3', text: "09:30 - Baño silla y afeitado", type: "hygiene" },
+                        { id: 'p3_d4', text: "11:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
+                        { id: 'p3_d5', text: "12:00 - Terapia de marcha / Movilidad", type: "physio" },
+                        { id: 'p3_d6', text: "14:00 - Comida (textura papilla) e Hidratación", type: "food" },
+                        { id: 'p3_d7', text: "15:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
+                        { id: 'p3_d8', text: "18:00 - Aseo perineal y cambio ropa", type: "hygiene" }
+                    ],
+                    noche: [
+                        { id: 'p3_n1', text: "19:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
+                        { id: 'p3_n2', text: "19:30 - Cena ligera asistida", type: "food" },
+                        { id: 'p3_n3', text: "21:00 - Preparación dormir / Aseo bucal", type: "hygiene" },
+                        { id: 'p3_n4', text: "23:00 - Revisión rigidez y postura", type: "check" },
+                        { id: 'p3_n5', text: "02:00 - Asistencia orinal / Pañal", type: "hygiene" },
+                        { id: 'p3_n6', text: "05:00 - Cambio de postura", type: "physio" },
+                        { id: 'p3_n7', text: "07:00 - Entrega de turno y Meds AM", type: "check" }
+                    ]
+                }
+            },
+            {
+                id: 'p4',
+                name: "Sra. Margarita",
+                condition: "Alzheimer (Fase Media)",
+                info: { address: "Portal Zauco #12", emergency: "Hijo: Pedro (445-987-6543)", age: "81", weight: "55kg", bloodType: "O-", allergies: "Polen", doctor: "Dr. Psique", diet: "Normal" },
+                tasks: {
+                    dia: [
+                        { id: 'p4_d1', text: "08:00 - Despertar suave y Memantina", type: "med" },
+                        { id: 'p4_d2', text: "09:00 - Desayuno y Socialización", type: "food" },
+                        { id: 'p4_d3', text: "10:30 - Aseo personal supervisado", type: "hygiene" },
+                        { id: 'p4_d4', text: "12:00 - Actividad cognitiva (música/fotos)", type: "physio" },
+                        { id: 'p4_d5', text: "14:00 - Comida principal", type: "food" },
+                        { id: 'p4_d6', text: "16:00 - Siesta corta (máx 30 min)", type: "check" },
+                        { id: 'p4_d7', text: "17:00 - Hidratación y caminata patio", type: "physio" },
+                        { id: 'p4_d8', text: "18:30 - Inicio protocolo calma (bajar luces)", type: "check" }
+                    ],
+                    noche: [
+                        { id: 'p4_n1', text: "19:30 - Cena y Quetiapina 25mg", type: "med" },
+                        { id: 'p4_n2', text: "20:30 - Acompañamiento al baño y pijama", type: "hygiene" },
+                        { id: 'p4_n3', text: "22:00 - Asegurar puertas y ventanas", type: "check" },
+                        { id: 'p4_n4', text: "00:00 - Monitoreo visual (sin despertar)", type: "check" },
+                        { id: 'p4_n5', text: "03:00 - Asistencia baño si despierta", type: "hygiene" },
+                        { id: 'p4_n6', text: "06:00 - Monitoreo final", type: "check" }
+                    ]
+                }
+            },
+            {
+                id: 'p5',
+                name: "Don Felipe",
+                condition: "Secuelas EVC / Hemiplejia",
+                info: { address: "Calle 16 de Septiembre", emergency: "Nieta: Ana (445-111-2222)", age: "69", weight: "75kg", bloodType: "A+", allergies: "Aspirina", doctor: "Dr. Vascular", diet: "Blanda" },
+                tasks: {
+                    dia: [
+                        { id: 'p5_d1', text: "08:00 - Signos Vitales y Movilización cama", type: "physio" },
+                        { id: 'p5_d2', text: "09:00 - Desayuno y Medicamentos (Antihipertensivo)", type: "med" },
+                        { id: 'p5_d3', text: "10:30 - Baño de regadera (silla ruedas)", type: "hygiene" },
+                        { id: 'p5_d4', text: "12:00 - Ejercicios pasivos lado afectado", type: "physio" },
+                        { id: 'p5_d5', text: "14:00 - Comida y Aseo bucal posterior", type: "food" },
+                        { id: 'p5_d6', text: "16:00 - Cambio pañal y revisión piel sacra", type: "hygiene" },
+                        { id: 'p5_d7', text: "18:00 - Sentar en reposet 1 hora", type: "physio" }
+                    ],
+                    noche: [
+                        { id: 'p5_n1', text: "20:00 - Cena y Cambio de pañal", type: "hygiene" },
+                        { id: 'p5_n2', text: "22:00 - Hidratación piel y acomodo almohadas", type: "cure" },
+                        { id: 'p5_n3', text: "00:00 - CAMBIO POSTURA (Derecho)", type: "physio" },
+                        { id: 'p5_n4', text: "03:00 - CAMBIO POSTURA (Izquierdo) y Pañal", type: "physio" },
+                        { id: 'p5_n5', text: "06:00 - CAMBIO POSTURA (Supino) y Sábanas", type: "physio" }
+                    ]
+                }
+            },
+            {
+                id: 'p6',
+                name: "Sra. Carmen",
+                condition: "Artritis Reumatoide Severa",
+                info: { address: "Col. La Joya #55", emergency: "Hija: Sofia (445-333-4444)", age: "72", weight: "65kg", bloodType: "B-", allergies: "Ninguna", doctor: "Dr. Reuma", diet: "Antiinflamatoria" },
+                tasks: {
+                    dia: [
+                        { id: 'p6_d1', text: "08:00 - Prednisona y Analgésico (antes de mover)", type: "med" },
+                        { id: 'p6_d2', text: "09:00 - Desayuno y Compresas tibias manos", type: "cure" },
+                        { id: 'p6_d3', text: "11:00 - Ayuda baño agua caliente (rigidez)", type: "hygiene" },
+                        { id: 'p6_d4', text: "13:00 - Movilización suave articulaciones", type: "physio" },
+                        { id: 'p6_d5', text: "14:30 - Comida (dieta mediterránea)", type: "food" },
+                        { id: 'p6_d6', text: "17:00 - Terapia ocupacional ligera", type: "physio" },
+                        { id: 'p6_d7', text: "19:00 - Preparar medicación nocturna", type: "med" }
+                    ],
+                    noche: [
+                        { id: 'p6_n1', text: "20:00 - Cena y Tramadol gotas", type: "med" },
+                        { id: 'p6_n2', text: "21:30 - Masaje suave con pomada y pijama", type: "physio" },
+                        { id: 'p6_n3', text: "23:00 - Acomodo almohadas entre piernas", type: "check" },
+                        { id: 'p6_n4', text: "02:00 - Asistencia al baño (riesgo caídas)", type: "hygiene" },
+                        { id: 'p6_n5', text: "05:00 - Revisión confort / Cobijas", type: "check" }
+                    ]
+                }
+            },
+            {
+                id: 'p7',
+                name: "Don Luis",
+                condition: "Insuficiencia Renal (Diálisis)",
+                info: { address: "Calle Pípila #8", emergency: "Hermano: Juan (445-555-7777)", age: "65", weight: "68kg", bloodType: "AB+", allergies: "Yodo", doctor: "Dr. Nefro", diet: "Renal" },
+                tasks: {
+                    dia: [
+                        { id: 'p7_d1', text: "07:00 - PESO MATUTINO y Signos Vitales", type: "vital" },
+                        { id: 'p7_d2', text: "08:00 - Medicamentos quelantes con Desayuno", type: "med" },
+                        { id: 'p7_d3', text: "09:30 - PREPARACIÓN DIÁLISIS (Asepsia)", type: "cure" },
+                        { id: 'p7_d4', text: "10:00 - CONEXIÓN DIÁLISIS (Bolsa 1)", type: "cure" },
+                        { id: 'p7_d5', text: "12:00 - Drenaje y control de líquido (Balance)", type: "check" },
+                        { id: 'p7_d6', text: "14:00 - Comida estricta (Baja sal/potasio)", type: "food" },
+                        { id: 'p7_d7', text: "16:00 - CONEXIÓN DIÁLISIS (Bolsa 2)", type: "cure" },
+                        { id: 'p7_d8', text: "18:00 - Drenaje y Balance hídrico", type: "check" }
+                    ],
+                    noche: [
+                        { id: 'p7_n1', text: "20:00 - Cena y Medicamentos PA", type: "med" },
+                        { id: 'p7_n2', text: "22:00 - CONEXIÓN NOCTURNA (Máquina o Manual)", type: "cure" },
+                        { id: 'p7_n3', text: "23:00 - Verificar catéter y flujo", type: "check" },
+                        { id: 'p7_n4', text: "02:00 - Monitoreo alarmas máquina / Drenaje", type: "check" },
+                        { id: 'p7_n5', text: "06:00 - DESCONEXIÓN y Cierre Balance 24h", type: "cure" }
+                    ]
+                }
+            },
+            {
+                id: 'p8',
+                name: "Sra. Rosa",
+                condition: "Insuficiencia Cardíaca",
+                info: { address: "Av. Las Flores #100", emergency: "Vecina: Lupe (445-888-9999)", age: "79", weight: "58kg", bloodType: "O+", allergies: "Látex", doctor: "Dr. Cardio", diet: "Sin sal" },
+                tasks: {
+                    dia: [
+                        { id: 'p8_d1', text: "08:00 - Peso diario y Furosemida", type: "med" },
+                        { id: 'p8_d2', text: "09:00 - Desayuno sin sal y líquidos medidos", type: "food" },
+                        { id: 'p8_d3', text: "11:00 - Revisión edema (hinchazón) pies", type: "check" },
+                        { id: 'p8_d4', text: "13:00 - Descanso piernas elevadas", type: "physio" },
+                        { id: 'p8_d5', text: "14:30 - Comida y Meds corazón", type: "food" },
+                        { id: 'p8_d6', text: "17:00 - Toma Presión Arterial y FC", type: "vital" },
+                        { id: 'p8_d7', text: "18:00 - Caminata leve interior", type: "physio" }
+                    ],
+                    noche: [
+                        { id: 'p8_n1', text: "19:30 - Cena muy ligera (evitar reflujo)", type: "food" },
+                        { id: 'p8_n2', text: "21:00 - Acomodo almohadas (Posición Fowler)", type: "physio" },
+                        { id: 'p8_n3', text: "22:00 - Revisión dificultad respiratoria", type: "vital" },
+                        { id: 'p8_n4', text: "00:00 - Asistencia orinal (diurético)", type: "hygiene" },
+                        { id: 'p8_n5', text: "03:00 - Monitoreo respiración", type: "check" },
+                        { id: 'p8_n6', text: "06:00 - Signos vitales al despertar", type: "vital" }
+                    ]
+                }
+            },
+            {
+                id: 'p9',
+                name: "Don Antonio",
+                condition: "EPOC Severo / O2 Dependiente",
+                info: { address: "Calle Hidalgo #33", emergency: "Hijo: Toño (445-222-3333)", age: "82", weight: "62kg", bloodType: "A+", allergies: "Polvo", doctor: "Dr. Neumo", diet: "Fraccionada" },
+                tasks: {
+                    dia: [
+                        { id: 'p9_d1', text: "08:00 - Inhaladores (Bomba) y Oximetría", type: "med" },
+                        { id: 'p9_d2', text: "09:00 - Desayuno (porciones pequeñas)", type: "food" },
+                        { id: 'p9_d3', text: "10:30 - Nebulización con palmadopercusión", type: "med" },
+                        { id: 'p9_d4', text: "12:00 - Baño rápido (evitar fatiga)", type: "hygiene" },
+                        { id: 'p9_d5', text: "14:00 - Comida y Chequeo tanque O2", type: "food" },
+                        { id: 'p9_d6', text: "16:00 - Ejercicios respiratorios suaves", type: "physio" },
+                        { id: 'p9_d7', text: "18:00 - Merienda y Oximetría en reposo", type: "vital" }
+                    ],
+                    noche: [
+                        { id: 'p9_n1', text: "20:00 - Rellenar humidificador O2", type: "check" },
+                        { id: 'p9_n2', text: "21:00 - Nebulización nocturna y Meds", type: "med" },
+                        { id: 'p9_n3', text: "23:00 - Revisar bigotera nasal y orejas", type: "cure" },
+                        { id: 'p9_n4', text: "02:00 - Oximetría sin despertar", type: "vital" },
+                        { id: 'p9_n5', text: "04:00 - Chequeo flujo Oxígeno", type: "check" },
+                        { id: 'p9_n6', text: "07:00 - Oximetría matutina y limpieza nasal", type: "vital" }
+                    ]
+                }
+            },
+            {
+                id: 'p10',
+                name: "Sra. Teresa",
+                condition: "Demencia Senil / Riesgo Caídas",
+                info: { address: "Privada del Sol #5", emergency: "Hija: Maria (445-444-5555)", age: "88", weight: "48kg", bloodType: "O-", allergies: "Ninguna", doctor: "Dr. Geria", diet: "Alta calórica" },
+                tasks: {
+                    dia: [
+                        { id: 'p10_d1', text: "08:30 - Despertar y cambio de pañal", type: "hygiene" },
+                        { id: 'p10_d2', text: "09:30 - Desayuno completo asistido", type: "food" },
+                        { id: 'p10_d3', text: "11:00 - Caminata vigilada (cinturón seguridad)", type: "physio" },
+                        { id: 'p10_d4', text: "12:30 - Hidratación (Jalea/Agua)", type: "food" },
+                        { id: 'p10_d5', text: "14:30 - Comida y Medicamentos", type: "food" },
+                        { id: 'p10_d6', text: "16:30 - Aseo y cambio de ropa", type: "hygiene" },
+                        { id: 'p10_d7', text: "18:00 - Juego de cartas/memoria", type: "physio" }
+                    ],
+                    noche: [
+                        { id: 'p10_n1', text: "19:30 - Cena (cereal/leche)", type: "food" },
+                        { id: 'p10_n2', text: "20:30 - Llevar al baño y Pijama", type: "hygiene" },
+                        { id: 'p10_n3', text: "21:30 - SUBIR BARANDALES CAMA", type: "check" },
+                        { id: 'p10_n4', text: "00:00 - Revisión pañal (cambio si requiere)", type: "hygiene" },
+                        { id: 'p10_n5', text: "03:00 - Ronda de seguridad (no despertar)", type: "check" },
+                        { id: 'p10_n6', text: "06:00 - Cambio pañal matutino", type: "hygiene" }
+                    ]
+                }
+            },
+            {
+                id: 'p11',
+                name: "Don Miguel",
+                condition: "Ceguera / Diabetes",
+                info: { address: "Calle 5 de Mayo", emergency: "Esposa: Laura (445-666-7777)", age: "70", weight: "85kg", bloodType: "B+", allergies: "Mariscos", doctor: "Dr. Oftalmo", diet: "Diabética" },
+                tasks: {
+                    dia: [
+                        { id: 'p11_d1', text: "07:30 - Glucosa y Guía al baño", type: "vital" },
+                        { id: 'p11_d2', text: "08:00 - Insulina Rápida y Desayuno (describir plato)", type: "food" },
+                        { id: 'p11_d3', text: "10:00 - Rasurado y Ducha asistida", type: "hygiene" },
+                        { id: 'p11_d4', text: "12:00 - Colación y Medicación oral", type: "med" },
+                        { id: 'p11_d5', text: "14:00 - Comida (cuidar temperatura)", type: "food" },
+                        { id: 'p11_d6', text: "16:00 - Radio/Audiolibro y Convivencia", type: "physio" },
+                        { id: 'p11_d7', text: "18:00 - Caminata segura en patio", type: "physio" }
+                    ],
+                    noche: [
+                        { id: 'p11_n1', text: "20:00 - Glucosa y Cena", type: "vital" },
+                        { id: 'p11_n2', text: "21:00 - Aseo bucal y Pijama", type: "hygiene" },
+                        { id: 'p11_n3', text: "22:00 - Verificar entorno seguro (sin obstáculos)", type: "check" },
+                        { id: 'p11_n4', text: "00:00 - Monitoreo sueño", type: "check" },
+                        { id: 'p11_n5', text: "03:00 - Asistencia al baño (Llamado)", type: "hygiene" },
+                        { id: 'p11_n6', text: "06:00 - Preparar ropa día siguiente", type: "check" }
+                    ]
+                }
+            },
+            {
+                id: 'p12',
+                name: "Sra. Lupita",
+                condition: "Postración Total / Úlceras (Escaras)",
+                info: { address: "Calle Obregón", emergency: "Hijo: Beto (445-000-1111)", age: "90", weight: "45kg", bloodType: "A-", allergies: "Adhesivo", doctor: "Dr. Heridas", diet: "Sonda NG" },
+                tasks: {
+                    dia: [
+                        { id: 'p12_d1', text: "07:00 - Cambio pañal y Sábanas limpias", type: "hygiene" },
+                        { id: 'p12_d2', text: "08:00 - ALIMENTACIÓN SONDA (Bolus 1) + Meds", type: "food" },
+                        { id: 'p12_d3', text: "09:00 - CURACIÓN ÚLCERAS (Sacro/Talones)", type: "cure" },
+                        { id: 'p12_d4', text: "11:00 - MOVILIZACIÓN (Reloj 11h) y Lubricar", type: "physio" },
+                        { id: 'p12_d5', text: "13:00 - ALIMENTACIÓN SONDA (Bolus 2) + Agua", type: "food" },
+                        { id: 'p12_d6', text: "15:00 - MOVILIZACIÓN (Reloj 15h) y Pañal", type: "physio" },
+                        { id: 'p12_d7', text: "17:00 - Baño de esponja en cama", type: "hygiene" },
+                        { id: 'p12_d8', text: "18:00 - ALIMENTACIÓN SONDA (Bolus 3)", type: "food" }
+                    ],
+                    noche: [
+                        { id: 'p12_n1', text: "20:00 - Limpieza Sonda y Enjuague bucal", type: "hygiene" },
+                        { id: 'p12_n2', text: "21:00 - MOVILIZACIÓN (Decúbito Lat Der)", type: "physio" },
+                        { id: 'p12_n3', text: "23:00 - Cambio de Pañal estricto", type: "hygiene" },
+                        { id: 'p12_n4', text: "00:00 - MOVILIZACIÓN (Decúbito Lat Izq)", type: "physio" },
+                        { id: 'p12_n5', text: "03:00 - MOVILIZACIÓN (Supino) y Pañal", type: "physio" },
+                        { id: 'p12_n6', text: "06:00 - Aspiración de secreciones (si requiere)", type: "cure" }
                     ]
                 }
             }
@@ -147,7 +412,7 @@
         };
 
         // ---------------------------------------------------------
-        // 4. COMPONENTES DE LA INTERFAZ
+        // 4. COMPONENTES
         // ---------------------------------------------------------
 
         function LoginScreen({ onLogin }) {
@@ -172,7 +437,6 @@
                 <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-slate-900 to-slate-800">
                     <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center fade-in border border-slate-700">
                         
-                        {/* Fondo #0E0E0E para el logo */}
                         <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-muvnBlue">
                             <img src={logoUrl} alt="MUVN Logo" className="w-full h-full object-contain" />
                         </div>
@@ -188,10 +452,10 @@
                                     value={selectedUser}
                                     onChange={(e) => {setSelectedUser(e.target.value); setError("");}}
                                 >
-                                    <option value="" className="text-slate-500">-- Elige tu nombre --</option>
+                                    <option value="" className="text-gray-500">-- Elige tu nombre --</option>
                                     {CAREGIVERS.map(c => (
-                                        <option key={c.pin} value={c.name} className="text-slate-900">
-                                            {c.name}
+                                        <option key={c.pin} value={c.name} className="text-gray-900 font-medium">
+                                            {c.name} {c.isSupervisor ? '(Supervisor)' : ''}
                                         </option>
                                     ))}
                                 </select>
@@ -201,7 +465,7 @@
                                 <div className="text-left animate-fade-in">
                                     <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ingrese PIN (4 dígitos)</label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                                             <Icons.Lock />
                                         </div>
                                         <input 
@@ -288,13 +552,12 @@
             );
         }
 
-        // --- COMPONENTE DE LISTA DE PACIENTES PARA EL SUPERVISOR ---
         function SupervisorPatientList({ assignments, onSelectPatient, shift }) {
             return (
                  <div className="p-4 fade-in max-w-xl mx-auto mt-6">
                     <h2 className="text-2xl font-bold mb-6 text-white text-center">Lista de Pacientes Asignados</h2>
                     <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
-                        Turno {shift === 'dia' ? '☀️ Día' : '🌙 Noche'}
+                        Turno {shift === 'dia' ? '☀️ Día (07:00 - 19:00)' : '🌙 Noche (19:00 - 07:00)'}
                     </h3>
                     
                     <div className="space-y-4">
@@ -325,32 +588,31 @@
             );
         }
 
-
-        // --- DASHBOARD PRINCIPAL (Router) ---
         function Dashboard({ user, onLogout }) {
             const [selectedPatientId, setSelectedPatientId] = React.useState(null);
             const [shift, setShift] = React.useState("dia");
             const [records, setRecords] = React.useState({});
             const [generalObservation, setGeneralObservation] = React.useState("");
             const [status, setStatus] = React.useState("idle"); 
-            const [assignments, setAssignments] = React.useState({}); // Solo para Supervisor
+            const [assignments, setAssignments] = React.useState({}); 
 
             const isSupervisor = user.isSupervisor;
-            const patientIdDefault = PATIENTS[0].id; // Don Roberto 'p1'
+            
+            // Lógica de asignación: Si el usuario tiene un paciente asignado, ese es su default.
+            const defaultPatient = user.assignedPatientId ? user.assignedPatientId : PATIENTS[0].id;
 
             const getTodayStr = () => new Date().toISOString().split('T')[0];
             const formatDate = (date) => date ? new Date(date.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A';
 
-            // Efecto: Determinar paciente inicial (solo para cuidadores regulares)
             React.useEffect(() => {
+                // Si no es supervisor y no hay paciente seleccionado, cargar su paciente asignado
                 if (!isSupervisor && !selectedPatientId) {
-                    setSelectedPatientId(patientIdDefault);
+                    setSelectedPatientId(defaultPatient);
                 }
-            }, [isSupervisor]);
+            }, [isSupervisor, defaultPatient]);
 
-            // Efecto: Cargar datos (Para cuidador detallado O para Supervisor al seleccionar)
             React.useEffect(() => {
-                if(!selectedPatientId || isSupervisor) return; // Supervisor carga la lista, no el detalle aquí
+                if(!selectedPatientId || isSupervisor) return;
 
                 const loadData = async () => {
                     setStatus("loading");
@@ -371,7 +633,6 @@
                 loadData();
             }, [selectedPatientId, shift, isSupervisor]);
 
-            // Efecto: Cargar asignaciones de cuidadores (Solo para Supervisor)
             React.useEffect(() => {
                 if (!isSupervisor) return;
 
@@ -379,7 +640,6 @@
                     setStatus("loading_list");
                     const dateStr = getTodayStr();
                     try {
-                        // Obtener todos los registros del día actual
                         const snapshot = await db.collection("registros_diarios")
                             .where('date', '==', dateStr)
                             .get();
@@ -391,7 +651,6 @@
                             const { patientId, caregiver, lastUpdate } = data;
                             const updateTime = lastUpdate.toDate ? lastUpdate.toDate() : new Date(lastUpdate.seconds * 1000);
 
-                            // Guardar el registro más reciente por paciente y turno
                             const key = patientId; 
                             if (!latestAssignments[key] || updateTime > latestAssignments[key].timestamp) {
                                 latestAssignments[key] = {
@@ -414,15 +673,12 @@
                         setStatus("error");
                     }
                 };
-
-                // No usamos onSnapshot aquí para simplificar la lógica del supervisor, solo get
                 fetchAssignments();
-
             }, [isSupervisor, shift]);
 
 
             const saveData = async (newRecords, newObs) => {
-                if(!selectedPatientId || isSupervisor) return; // Supervisor no guarda
+                if(!selectedPatientId || isSupervisor) return;
 
                 setStatus("saving");
                 const dateStr = getTodayStr();
@@ -479,8 +735,6 @@
 
             const currentPatient = PATIENTS.find(p => p.id === selectedPatientId);
 
-            // --- RENDERIZADO DEL DASHBOARD ---
-
             return (
                 <div className="pb-24 bg-slate-900 min-h-screen">
                     <header className="bg-slate-800 sticky top-0 z-20 shadow-md border-b border-slate-700 px-4 py-3 flex justify-between items-center">
@@ -497,7 +751,6 @@
                         </div>
                     </header>
                     
-                    {/* Selectores de Turno para Supervisor o Cuidador que regresa a la lista */}
                     {(isSupervisor || !selectedPatientId) && (
                         <div className="p-4 fade-in max-w-xl mx-auto mt-6">
                             <label className="block text-sm font-semibold mb-3 text-slate-400">Selecciona Horario</label>
@@ -508,8 +761,6 @@
                         </div>
                     )}
 
-
-                    {/* VISTA DEL SUPERVISOR (LISTA) */}
                     {isSupervisor && !selectedPatientId && (
                         status === 'loading_list' ? (
                             <div className="text-center p-8 text-lg text-[#0DA4BF]">Cargando asignaciones...</div>
@@ -522,10 +773,9 @@
                         )
                     )}
 
-                    {/* VISTA DETALLADA DEL PACIENTE (Cuidador Regular o Supervisor que ha seleccionado) */}
                     {selectedPatientId && currentPatient && (
                         <div className="p-4 max-w-2xl mx-auto fade-in">
-                            {(isSupervisor || selectedPatientId !== patientIdDefault) && (
+                            {(isSupervisor || (selectedPatientId !== defaultPatient)) && (
                                 <button onClick={() => setSelectedPatientId(null)} className="text-sm text-[#0DA4BF] hover:text-white mb-4 flex items-center gap-1 transition">
                                     ← Volver a la lista
                                 </button>
@@ -533,7 +783,6 @@
 
                             <TechnicalSheet patient={currentPatient} />
                             
-                            {/* Mostrar cuidador asignado solo si el supervisor está viendo esta ficha */}
                             {isSupervisor && assignments[selectedPatientId] && (
                                 <div className="bg-slate-700 p-4 rounded-xl border border-slate-600 mb-6">
                                     <span className="block text-xs font-bold uppercase text-slate-400">Cuidador Registrando el Turno Actual:</span>
@@ -557,7 +806,7 @@
                                                             type="checkbox" 
                                                             checked={rec.checked || false} 
                                                             onChange={() => toggleTask(task.id)}
-                                                            disabled={isSupervisor} // Supervisor no puede interactuar con el checkbox
+                                                            disabled={isSupervisor}
                                                             className={`w-6 h-6 accent-[#0DA4BF] cursor-pointer rounded focus:ring-offset-slate-800 focus:ring-[#0DA4BF] ${isSupervisor ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         />
                                                     </div>
@@ -597,7 +846,6 @@
                                 ></textarea>
                             </div>
 
-                            {/* El botón de WhatsApp solo aparece para Cuidadores Regulares */}
                             {!isSupervisor && (
                                 <div className="fixed bottom-0 left-0 w-full p-4 bg-slate-900/80 backdrop-blur-md border-t border-slate-800">
                                     <button 
@@ -614,7 +862,6 @@
             );
         }
 
-        // --- APP PRINCIPAL ---
         function App() {
             const [user, setUser] = React.useState(null);
             return (
