@@ -1,23 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUVN - Registro de Cuidados</title>
-    <meta name="description" content="Herramienta exclusiva para el equipo de cuidadores.">
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="MUVN - Equipo de Cuidados">
-    <meta property="og:description" content="Cuidar con el corazón hace la diferencia. ❤️ Tu dedicación transforma vidas cada día.">
-    <meta property="og:image" content="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/refs/heads/main/muvn.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="MUVN - Equipo de Cuidados">
-    <meta name="twitter:description" content="Cuidar con el corazón hace la diferencia. ❤️ Tu dedicación transforma vidas cada día.">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/refs/heads/main/muvn.jpg">
+    <title>MUVN - Acceso Seguro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -28,13 +14,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
-<body class="bg-blue-50 text-gray-800 font-sans pb-20">
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
     <div id="root"></div>
 
@@ -42,7 +28,6 @@
         // ---------------------------------------------------------
         // 1. CONFIGURACIÓN DE FIREBASE
         // ---------------------------------------------------------
-        // ¡PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE ENTRE LAS LLAVES!
         const firebaseConfig = {
             apiKey: "AIzaSyDmf2tlJYR7cP_vxv66tVozQDBFehURGXM",
             authDomain: "data-d064b.firebaseapp.com",
@@ -52,281 +37,467 @@
             appId: "1:15120958868:web:ec1d059d08f631bb81fb81"
         };
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
         // ---------------------------------------------------------
-        // 2. COMPONENTES E ICONOS (Igual que antes)
+        // 2. DATOS (PERSONAL Y PACIENTES)
         // ---------------------------------------------------------
-        const Icons = {
-            Sun: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
-            Moon: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>,
-            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-            CheckCircle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-            Send: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
-            Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
-            Activity: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-            AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-            ClipboardList: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
-            Heart: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>,
-            Cloud: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19c0-3.037-2.463-5.5-5.5-5.5S6.5 15.963 6.5 19"/><path d="M17.5 19h.5a3.5 3.5 0 1 0-1-6.429"/><path d="M6.5 19H6a4 4 0 1 1 .59-7.954"/><path d="M12 13.5V5"/><path d="m9 8 3-3 3 3"/></svg>
-        };
-
-        const CAREGIVERS = ["Ana Martínez", "Carlos Velázquez", "Beatriz Solís", "David López", "Elena Ramírez"];
+        
+        // Cuidadores con PIN de seguridad
+        const CAREGIVERS = [
+            { name: "Ana Martínez", pin: "1111", role: "Enfermera General" },
+            { name: "Carlos Velázquez", pin: "2222", role: "Cuidador Certificado" },
+            { name: "Beatriz Solís", pin: "3333", role: "Auxiliar Geriátrico" },
+            { name: "David López", pin: "4444", role: "Enfermero Intensivista" },
+            { name: "Elena Ramírez", pin: "5555", role: "Cuidadora Nocturna" },
+            { name: "Dr. Fernando Ruiz", pin: "9999", role: "Supervisor Médico" }
+        ];
 
         const PATIENTS = [
             {
-                id: 'p1', name: "Don Roberto (Diabetes/Hipertensión)", details: "Insulinodependiente.",
+                id: 'p1', 
+                name: "Don Roberto", 
+                condition: "Diabetes Mellitus T2 / Hipertensión",
+                // Ficha Técnica
+                info: {
+                    age: "78 años", weight: "82 kg", bloodType: "O+",
+                    allergies: "Penicilina", doctor: "Dr. H. Gtz (555-0123)",
+                    emergency: "Hijo: Luis (555-9876)",
+                    diet: "Diabética estricta (baja en sodio/azúcar)"
+                },
                 tasks: {
-                    dia: [ { id: 't1_d1', text: "Toma de Glucosa", type: "vital" }, { id: 't1_d2', text: "Insulina NPH", type: "med" }, { id: 't1_d3', text: "Desayuno", type: "food" } ],
-                    noche: [ { id: 't1_n1', text: "Cena", type: "food" }, { id: 't1_n3', text: "Insulina Noche", type: "med" } ]
+                    dia: [ // Turno 12 horas AM
+                        { id: 't_am_1', text: "07:00 - Toma de Glucosa en ayunas", type: "vital" },
+                        { id: 't_am_2', text: "07:15 - Insulina NPH (según esquema)", type: "med" },
+                        { id: 't_am_3', text: "08:00 - Desayuno", type: "food" },
+                        { id: 't_am_4', text: "09:00 - Losartán 50mg", type: "med" },
+                        { id: 't_am_5', text: "11:00 - Colación media mañana", type: "food" },
+                        { id: 't_am_6', text: "12:00 - Toma de Presión Arterial", type: "vital" },
+                        { id: 't_am_7', text: "14:00 - Comida Principal", type: "food" },
+                        { id: 't_am_8', text: "16:00 - Caminata asistida (15 min)", type: "physio" }
+                    ],
+                    noche: [ // Turno 12 horas PM
+                        { id: 't_pm_1', text: "19:00 - Cena ligera", type: "food" },
+                        { id: 't_pm_2', text: "20:00 - Toma de Glucosa post-pandrial", type: "vital" },
+                        { id: 't_pm_3', text: "21:00 - Insulina Glargina", type: "med" },
+                        { id: 't_pm_4', text: "22:00 - Aseo dental y cambio de pañal", type: "hygiene" },
+                        { id: 't_pm_5', text: "00:00 - Ronda de sueño / Monitoreo", type: "check" },
+                        { id: 't_pm_6', text: "04:00 - Cambio de posición (evitar úlceras)", type: "physio" }
+                    ]
                 }
             },
             {
-                id: 'p2', name: "Doña María (Alzheimer)", details: "Desorientación espacial.",
+                id: 'p2', 
+                name: "Sra. Elena", 
+                condition: "Post-Op Fractura de Cadera / EPOC",
+                info: {
+                    age: "84 años", weight: "60 kg", bloodType: "A-",
+                    allergies: "Ninguna conocida", doctor: "Dra. Salas (Trauma)",
+                    emergency: "Hija: Clara (555-1122)",
+                    diet: "Alta en fibra y proteínas"
+                },
                 tasks: {
-                    dia: [ { id: 'p2_d1', text: "Memantina 10mg", type: "med" }, { id: 'p2_d2', text: "Aseo asistido", type: "hygiene" } ],
-                    noche: [ { id: 'p2_n1', text: "Quetiapina (SOS)", type: "med" }, { id: 'p2_n2', text: "Barandales", type: "safety" } ]
+                    dia: [
+                        { id: 'e_am_1', text: "08:00 - Nebulización (Combivent)", type: "med" },
+                        { id: 'e_am_2', text: "09:00 - Baño de esponja (cuidar herida)", type: "hygiene" },
+                        { id: 'e_am_3', text: "10:00 - Curación de herida quirúrgica", type: "cure" },
+                        { id: 'e_am_4', text: "12:00 - Ejercicios respiratorios", type: "physio" },
+                        { id: 'e_am_5', text: "14:00 - Medicamento para dolor (Tramadol)", type: "med" }
+                    ],
+                    noche: [
+                        { id: 'e_pm_1', text: "20:00 - Oxígeno suplementario (2L/min)", type: "med" },
+                        { id: 'e_pm_2', text: "22:00 - Revisión de saturación O2", type: "vital" },
+                        { id: 'e_pm_3', text: "23:00 - Colocar medias de compresión", type: "physio" }
+                    ]
                 }
             }
         ];
-        // (He resumido los pacientes para el ejemplo, pero tú puedes pegar tu lista completa de vuelta aquí)
 
-        // --- COMPONENTE PRINCIPAL ---
-        function App() {
-            const [caregiver, setCaregiver] = React.useState("");
-            const [shift, setShift] = React.useState("");
-            const [patientId, setPatientId] = React.useState("");
-            const [records, setRecords] = React.useState({});
-            const [status, setStatus] = React.useState("listo"); // listo, cargando, guardando
+        // ---------------------------------------------------------
+        // 3. ICONOS SVG
+        // ---------------------------------------------------------
+        const Icons = {
+            Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+            User: () => <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            Check: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            File: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            LogOut: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
+            Whatsapp: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        };
 
-            // Obtener fecha actual en formato string simple para usar como ID (YYYY-MM-DD)
-            const getTodayStr = () => {
-                const now = new Date();
-                return now.toISOString().split('T')[0]; 
+        // ---------------------------------------------------------
+        // 4. COMPONENTES DE LA INTERFAZ
+        // ---------------------------------------------------------
+
+        // --- PANTALLA DE LOGIN ---
+        function LoginScreen({ onLogin }) {
+            const [selectedUser, setSelectedUser] = React.useState("");
+            const [pin, setPin] = React.useState("");
+            const [error, setError] = React.useState("");
+
+            const handleAttempt = (e) => {
+                e.preventDefault();
+                const user = CAREGIVERS.find(c => c.name === selectedUser);
+                if (user && user.pin === pin) {
+                    onLogin(user);
+                } else {
+                    setError("PIN Incorrecto");
+                    setPin("");
+                }
             };
 
-            // ---------------------------------------------------------
-            // 3. LÓGICA DE BASE DE DATOS (EFECTOS)
-            // ---------------------------------------------------------
-            
-            // Cargar datos cuando cambie Paciente, Turno o Cuidador
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-slate-200 to-slate-300">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center fade-in">
+                        <div className="mx-auto bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                            <Icons.User />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-1">Bienvenido a MUVN</h2>
+                        <p className="text-sm text-slate-500 mb-6">Plataforma de Registro Clínico</p>
+
+                        <form onSubmit={handleAttempt} className="space-y-4">
+                            <div className="text-left">
+                                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Seleccionar Personal</label>
+                                <select 
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                    value={selectedUser}
+                                    onChange={(e) => {setSelectedUser(e.target.value); setError("");}}
+                                >
+                                    <option value="">-- Elige tu nombre --</option>
+                                    {CAREGIVERS.map(c => <option key={c.pin} value={c.name}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            {selectedUser && (
+                                <div className="text-left animate-fade-in">
+                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Ingrese PIN (4 dígitos)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <Icons.Lock />
+                                        </div>
+                                        <input 
+                                            type="password" 
+                                            maxLength="4"
+                                            className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-lg text-center tracking-widest text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={pin}
+                                            onChange={(e) => setPin(e.target.value)}
+                                            placeholder="••••"
+                                        />
+                                    </div>
+                                    {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+                                </div>
+                            )}
+
+                            <button 
+                                disabled={!selectedUser || pin.length < 4}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
+                            >
+                                Ingresar al Turno
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- FICHA TÉCNICA DEL PACIENTE ---
+        function TechnicalSheet({ patient }) {
+            const { info } = patient;
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <div className="bg-slate-800 text-white px-4 py-3 flex items-center gap-2">
+                        <Icons.File />
+                        <h3 className="font-bold">Ficha Técnica</h3>
+                    </div>
+                    <div className="p-4 grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span className="block text-slate-400 text-xs uppercase">Paciente</span>
+                            <span className="font-bold text-slate-800 text-lg">{patient.name}</span>
+                        </div>
+                         <div>
+                            <span className="block text-slate-400 text-xs uppercase">Diagnóstico</span>
+                            <span className="font-semibold text-blue-600">{patient.condition}</span>
+                        </div>
+                        <div className="col-span-2 border-t pt-2 mt-2 grid grid-cols-2 gap-4">
+                             <div>
+                                <span className="block text-slate-400 text-xs">Edad / Peso</span>
+                                <span className="font-medium">{info.age} - {info.weight}</span>
+                            </div>
+                            <div>
+                                <span className="block text-slate-400 text-xs">Tipo Sangre</span>
+                                <span className="font-medium">{info.bloodType}</span>
+                            </div>
+                            <div>
+                                <span className="block text-slate-400 text-xs text-red-400">Alergias</span>
+                                <span className="font-medium text-red-600">{info.allergies}</span>
+                            </div>
+                            <div>
+                                <span className="block text-slate-400 text-xs">Emergencia</span>
+                                <span className="font-medium">{info.emergency}</span>
+                            </div>
+                             <div className="col-span-2">
+                                <span className="block text-slate-400 text-xs">Médico Tratante</span>
+                                <span className="font-medium">{info.doctor}</span>
+                            </div>
+                             <div className="col-span-2 bg-yellow-50 p-2 rounded border border-yellow-100">
+                                <span className="block text-yellow-600 text-xs font-bold">Dieta</span>
+                                <span className="text-yellow-800">{info.diet}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- DASHBOARD PRINCIPAL ---
+        function Dashboard({ user, onLogout }) {
+            const [selectedPatientId, setSelectedPatientId] = React.useState("");
+            const [shift, setShift] = React.useState("dia"); // dia | noche
+            const [records, setRecords] = React.useState({});
+            const [generalObservation, setGeneralObservation] = React.useState("");
+            const [status, setStatus] = React.useState("idle"); 
+
+            // Fecha actual
+            const getTodayStr = () => new Date().toISOString().split('T')[0];
+
             React.useEffect(() => {
-                if(!patientId || !shift) {
-                    setRecords({});
-                    return;
-                }
+                if(!selectedPatientId) return;
 
                 const loadData = async () => {
-                    setStatus("cargando");
+                    setStatus("loading");
                     const dateStr = getTodayStr();
-                    // ID ÚNICO DEL DOCUMENTO: fecha_turno_paciente
-                    const docId = `${dateStr}_${shift}_${patientId}`;
-
+                    const docId = `${dateStr}_${shift}_${selectedPatientId}`;
                     try {
                         const docRef = db.collection("registros_diarios").doc(docId);
                         const docSnap = await docRef.get();
-
                         if (docSnap.exists) {
                             const data = docSnap.data();
                             setRecords(data.records || {});
-                            if(data.caregiver) setCaregiver(data.caregiver);
+                            setGeneralObservation(data.generalObservation || "");
                         } else {
-                            setRecords({}); // Nuevo día/turno limpio
+                            setRecords({});
+                            setGeneralObservation("");
                         }
-                    } catch (error) {
-                        console.error("Error cargando:", error);
-                        alert("Error de conexión. Verifica tu internet.");
-                    } finally {
-                        setStatus("listo");
-                    }
+                    } catch (e) { console.error(e); } finally { setStatus("idle"); }
                 };
-
                 loadData();
+            }, [selectedPatientId, shift]);
 
-            }, [patientId, shift]);
-
-            // Función para guardar en Firestore
-            const saveToFirestore = async (newRecords) => {
-                if(!patientId || !shift) return;
-
-                setStatus("guardando");
+            const saveData = async (newRecords, newObs) => {
+                if(!selectedPatientId) return;
                 const dateStr = getTodayStr();
-                const docId = `${dateStr}_${shift}_${patientId}`;
-
+                const docId = `${dateStr}_${shift}_${selectedPatientId}`;
+                setStatus("saving");
                 try {
                     await db.collection("registros_diarios").doc(docId).set({
                         date: dateStr,
                         shift: shift,
-                        patientId: patientId,
-                        caregiver: caregiver,
+                        patientId: selectedPatientId,
+                        caregiver: user.name,
                         lastUpdate: new Date(),
-                        records: newRecords
-                    }, { merge: true }); // Merge evita borrar otros campos si agregamos más cosas
-                    
-                    setStatus("listo");
-                } catch (error) {
-                    console.error("Error guardando:", error);
-                    setStatus("error");
-                }
+                        records: newRecords,
+                        generalObservation: newObs
+                    }, { merge: true });
+                    setStatus("saved");
+                    setTimeout(() => setStatus("idle"), 2000);
+                } catch (e) { setStatus("error"); }
             };
 
-            // ---------------------------------------------------------
-            // 4. MANEJADORES DE EVENTOS
-            // ---------------------------------------------------------
-
-            const handleTaskCheck = (taskId) => {
+            const toggleTask = (taskId, text) => {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const current = records[taskId] || {};
+                
+                const updatedRec = current.checked 
+                    ? { ...current, checked: false, completedAt: null }
+                    : { ...current, checked: true, completedAt: timeString };
 
-                const newRecords = { ...records };
-                const current = newRecords[taskId] || {};
-
-                if (current.checked) {
-                    newRecords[taskId] = { ...current, checked: false, time: null };
-                } else {
-                    newRecords[taskId] = { ...current, checked: true, time: timeString };
-                }
-
+                const newRecords = { ...records, [taskId]: updatedRec };
                 setRecords(newRecords);
-                saveToFirestore(newRecords); // Guardar en nube inmediatamente
+                saveData(newRecords, generalObservation);
             };
 
-            const handleTaskNote = (taskId, text) => {
+            const handleNote = (taskId, note) => {
                 const newRecords = {
                     ...records,
-                    [taskId]: { ...(records[taskId] || {}), note: text }
+                    [taskId]: { ...(records[taskId] || {}), note: note }
                 };
                 setRecords(newRecords);
-                // Nota: para el texto, quizás quieras usar un botón "guardar" o 'onBlur' 
-                // para no escribir en base de datos con cada letra. 
-                // Para simplificar, aquí guardamos al terminar de editar (onBlur en el input).
             };
-            
-            // Guardar nota cuando el usuario quita el foco del input
-            const saveNoteOnBlur = () => {
-                saveToFirestore(records);
-            }
 
-            const generateWhatsAppLink = () => {
-                if (!caregiver || !shift || !patientId) {
-                    alert("Faltan datos"); return;
-                }
-                const patient = PATIENTS.find(p => p.id === patientId);
-                const taskList = patient.tasks[shift] || [];
+            const handleSendWhatsapp = () => {
+                const p = PATIENTS.find(pt => pt.id === selectedPatientId);
+                const tasks = p.tasks[shift];
                 
-                let message = `📋 *REPORTE ${shift.toUpperCase()} - MUVN*\n`;
-                message += `📅 ${new Date().toLocaleDateString()} | 👤 ${caregiver}\n`;
-                message += `👴 ${patient.name}\n\n`;
-                
-                taskList.forEach(task => {
-                    const rec = records[task.id];
-                    if (rec && rec.checked) {
-                        message += `✅ ${task.text} (${rec.time})\n`;
-                        if (rec.note) message += `   📝 ${rec.note}\n`;
+                let msg = `🏥 *REPORTE DE TURNO - MUVN*\n`;
+                msg += `👤 Cuidador: ${user.name}\n📅 Fecha: ${getTodayStr()} | Turno: ${shift.toUpperCase()}\n`;
+                msg += `👴 Paciente: ${p.name}\n\n`;
+                msg += `*ACTIVIDADES REALIZADAS:*\n`;
+
+                tasks.forEach(t => {
+                    const rec = records[t.id];
+                    if(rec && rec.checked) {
+                        msg += `✅ ${t.text} @ ${rec.completedAt}\n`;
+                        if(rec.note) msg += `   📝 Nota: ${rec.note}\n`;
                     } else {
-                        message += `⭕ ${task.text}`;
-                         if (rec && rec.note) message += ` (Obs: ${rec.note})`;
-                        message += `\n`;
+                        msg += `⭕ ${t.text} (Pendiente)\n`;
                     }
                 });
 
-                const encodedMsg = encodeURIComponent(message);
-                window.open(`https://wa.me/524451586270?text=${encodedMsg}`, '_blank');
+                if(generalObservation) {
+                    msg += `\n*OBSERVACIONES GENERALES:*\n${generalObservation}\n`;
+                }
+
+                window.open(`https://wa.me/524451586270?text=${encodeURIComponent(msg)}`, '_blank');
             };
 
-            const currentPatient = PATIENTS.find(p => p.id === patientId);
-            const currentTasks = (currentPatient && shift) ? currentPatient.tasks[shift] : [];
+            const currentPatient = PATIENTS.find(p => p.id === selectedPatientId);
 
             return (
-                <div className="max-w-3xl mx-auto">
-                    {/* HEADER */}
-                    <header className="bg-sky-600 text-white p-4 shadow-md sticky top-0 z-10 rounded-b-xl flex justify-between items-center">
-                         <div>
-                            <h1 className="text-xl font-bold flex items-center gap-2"><Icons.Activity /> MUVN</h1>
-                         </div>
-                         <div className="text-xs font-mono bg-sky-700 px-2 py-1 rounded flex items-center gap-1">
-                            {status === 'cargando' && <span className="animate-pulse">☁️ Cargando...</span>}
-                            {status === 'guardando' && <span className="animate-pulse">💾 Guardando...</span>}
-                            {status === 'listo' && <span>☁️ En línea</span>}
-                         </div>
+                <div className="pb-24">
+                    {/* Header */}
+                    <header className="bg-white sticky top-0 z-20 shadow-sm border-b px-4 py-3 flex justify-between items-center">
+                        <div>
+                            <h1 className="font-bold text-slate-800">MUVN</h1>
+                            <p className="text-xs text-slate-500">Hola, {user.name.split(' ')[0]}</p>
+                        </div>
+                        <div className="flex gap-2">
+                             {status === 'saving' && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded animate-pulse">Guardando...</span>}
+                             {status === 'saved' && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Guardado</span>}
+                            <button onClick={onLogout} className="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200"><Icons.LogOut /></button>
+                        </div>
                     </header>
 
-                    <main className="p-4 space-y-6">
-                        {/* SELECCIÓN DE USUARIO */}
-                        <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <label className="block text-sm font-semibold text-gray-600 mb-2">👤 Cuidador</label>
-                            <select value={caregiver} onChange={(e) => setCaregiver(e.target.value)} className="w-full p-3 bg-gray-50 border rounded-lg">
-                                <option value="">-- Selecciona --</option>
-                                {CAREGIVERS.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </section>
+                    {/* Selector Inicial (si no hay paciente seleccionado) */}
+                    {!selectedPatientId ? (
+                        <div className="p-4 fade-in">
+                            <h2 className="text-lg font-bold mb-4">Configurar Turno</h2>
+                            
+                            <label className="block text-sm font-semibold mb-2 text-slate-600">Selecciona Turno</label>
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <button onClick={() => setShift('dia')} className={`p-4 rounded-xl border-2 font-bold ${shift === 'dia' ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white'}`}>☀️ Día (12h)</button>
+                                <button onClick={() => setShift('noche')} className={`p-4 rounded-xl border-2 font-bold ${shift === 'noche' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white'}`}>🌙 Noche (12h)</button>
+                            </div>
 
-                        {/* SELECCIÓN DE TURNO */}
-                        <section className="grid grid-cols-2 gap-4">
-                            <button onClick={() => setShift('dia')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 ${shift === 'dia' ? 'border-amber-400 bg-amber-50' : 'bg-white'}`}>
-                                <Icons.Sun /> <span className="font-bold">Día</span>
-                            </button>
-                            <button onClick={() => setShift('noche')} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 ${shift === 'noche' ? 'border-indigo-500 bg-indigo-50' : 'bg-white'}`}>
-                                <Icons.Moon /> <span className="font-bold">Noche</span>
-                            </button>
-                        </section>
-
-                         {/* SELECCIÓN PACIENTE */}
-                         <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                             <label className="block text-sm font-semibold text-gray-600 mb-2">👴 Paciente</label>
-                             <div className="space-y-2">
+                            <label className="block text-sm font-semibold mb-2 text-slate-600">Selecciona Paciente</label>
+                            <div className="space-y-3">
                                 {PATIENTS.map(p => (
-                                    <button key={p.id} onClick={() => setPatientId(p.id)} className={`w-full text-left p-3 rounded-lg border ${patientId === p.id ? 'border-sky-500 bg-sky-50' : 'hover:bg-gray-50'}`}>
-                                        <div className="font-bold">{p.name}</div>
+                                    <button 
+                                        key={p.id} 
+                                        onClick={() => setSelectedPatientId(p.id)}
+                                        className="w-full text-left p-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-400 transition flex justify-between items-center"
+                                    >
+                                        <div>
+                                            <div className="font-bold text-lg">{p.name}</div>
+                                            <div className="text-xs text-slate-500">{p.condition}</div>
+                                        </div>
+                                        <div className="text-blue-500">➜</div>
                                     </button>
                                 ))}
-                             </div>
-                        </section>
+                            </div>
+                        </div>
+                    ) : (
+                        // VISTA DEL TURNO ACTIVO
+                        <div className="p-4 max-w-2xl mx-auto fade-in">
+                            <button onClick={() => setSelectedPatientId("")} className="text-sm text-blue-600 mb-4 flex items-center gap-1">
+                                ← Cambiar Paciente
+                            </button>
+                            
+                            {/* Ficha Técnica */}
+                            <TechnicalSheet patient={currentPatient} />
 
-                        {/* LISTA DE TAREAS */}
-                        {shift && patientId && (
-                            <section className="space-y-4 animate-fade-in">
-                                <h2 className="text-lg font-bold text-gray-800 border-b pb-2">Lista de Tareas</h2>
-                                {currentTasks.map((task) => {
-                                    const record = records[task.id] || {};
-                                    const isChecked = record.checked || false;
-                                    return (
-                                        <div key={task.id} className={`bg-white rounded-lg shadow-sm border p-4 ${isChecked ? 'bg-gray-50' : ''}`}>
-                                            <div className="flex items-center gap-3">
-                                                <button onClick={() => handleTaskCheck(task.id)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300'}`}>
-                                                    <Icons.CheckCircle />
-                                                </button>
-                                                <div className="flex-1">
-                                                    <h3 className={`font-medium ${isChecked ? 'line-through text-gray-400' : ''}`}>{task.text}</h3>
-                                                    {isChecked && record.time && <div className="text-xs text-emerald-600">Completado: {record.time}</div>}
+                            {/* Lista de Tareas */}
+                            <div className="mb-6">
+                                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                    {shift === 'dia' ? '☀️ Tareas Turno Matutino' : '🌙 Tareas Turno Nocturno'}
+                                </h3>
+                                <div className="space-y-3">
+                                    {currentPatient.tasks[shift].map(task => {
+                                        const rec = records[task.id] || {};
+                                        return (
+                                            <div key={task.id} className={`p-3 rounded-lg border transition-all ${rec.checked ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className="pt-1">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={rec.checked || false} 
+                                                            onChange={() => toggleTask(task.id, task.text)}
+                                                            className="w-6 h-6 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <span className={`text-sm font-medium ${rec.checked ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                                                            {task.text}
+                                                        </span>
+                                                        {rec.checked && <div className="text-xs text-green-600 font-bold mt-1">Realizado a las {rec.completedAt}</div>}
+                                                        
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Agregar nota rápida..." 
+                                                            className="mt-2 w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-300"
+                                                            value={rec.note || ""}
+                                                            onChange={(e) => handleNote(task.id, e.target.value)}
+                                                            onBlur={() => saveData(records, generalObservation)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="mt-3 pl-11">
-                                                <textarea 
-                                                    placeholder="Notas..." 
-                                                    value={record.note || ""} 
-                                                    onChange={(e) => handleTaskNote(task.id, e.target.value)}
-                                                    onBlur={saveNoteOnBlur} 
-                                                    className="w-full text-sm p-2 border rounded bg-gray-50" rows={1} 
-                                                />
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </section>
-                        )}
-                    </main>
+                                        );
+                                    })}
+                                </div>
+                            </div>
 
-                     {/* FOOTER */}
-                     {shift && patientId && (
-                        <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 z-20">
-                             <button onClick={generateWhatsAppLink} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow flex justify-center gap-2">
-                                <Icons.Send /> Enviar Reporte
-                            </button>
+                            {/* Observaciones Generales */}
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-20">
+                                <h3 className="font-bold mb-2 text-sm uppercase text-slate-500">Observaciones Generales y Sugerencias</h3>
+                                <textarea 
+                                    className="w-full p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    rows="4"
+                                    placeholder="Escribe aquí cualquier eventualidad del turno..."
+                                    value={generalObservation}
+                                    onChange={(e) => setGeneralObservation(e.target.value)}
+                                    onBlur={() => saveData(records, generalObservation)}
+                                ></textarea>
+                            </div>
+
+                            {/* Botón Flotante WhatsApp */}
+                            <div className="fixed bottom-0 left-0 w-full p-4 bg-white/90 backdrop-blur border-t border-slate-200">
+                                <button 
+                                    onClick={handleSendWhatsapp}
+                                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
+                                >
+                                    <Icons.Whatsapp /> Enviar Reporte Final
+                                </button>
+                            </div>
                         </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- APP PRINCIPAL ---
+        function App() {
+            const [user, setUser] = React.useState(null);
+
+            // Verificar si hay sesión guardada (opcional, para simplicidad iniciamos siempre en login)
+            // Para demo:
+            const handleLogin = (loggedUser) => {
+                setUser(loggedUser);
+            };
+
+            const handleLogout = () => {
+                setUser(null);
+            };
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl overflow-hidden relative">
+                    {!user ? (
+                        <LoginScreen onLogin={handleLogin} />
+                    ) : (
+                        <Dashboard user={user} onLogout={handleLogout} />
                     )}
                 </div>
             );
