@@ -63,34 +63,35 @@
         firebase.firestore.setLogLevel('silent');
 
         // ---------------------------------------------------------
-        // 2. DATOS (Cuidadores vinculados a Pacientes)
+        // 2. DATOS (Cuidadores vinculados a Pacientes y TURNOS)
         // ---------------------------------------------------------
         
+        // AQUI ES DONDE SE CONFIGURA EL TURNO (assignedShift: 'dia' o 'noche')
         const CAREGIVERS = [
-            // Supervisor
+            // Supervisor (Sin restricción de turno)
             { name: "Mario Ulises Vallejo Navarrete", pin: "0000", isSupervisor: true }, 
             
-            // Cuidadores y Asignaciones
-            { name: "Ana Martínez", pin: "1111", assignedPatientId: "p1" },
-            { name: "Carlos Velázquez", pin: "2222", assignedPatientId: "p2" },
-            { name: "Beatriz Solís", pin: "3333", assignedPatientId: "p3" },
-            { name: "David López", pin: "4444", assignedPatientId: "p4" },
-            { name: "Elena Ramírez", pin: "5555", assignedPatientId: "p5" },
-            { name: "Fernando Ruiz", pin: "9999", assignedPatientId: "p6" },
-            { name: "Gabriela Torres", pin: "1010", assignedPatientId: "p7" },
-            { name: "Héctor Jiménez", pin: "2020", assignedPatientId: "p8" },
-            { name: "Isabel Castro", pin: "3030", assignedPatientId: "p9" },
-            { name: "Jorge Medina", pin: "4040", assignedPatientId: "p10" },
-            { name: "Karla Orozco", pin: "5050", assignedPatientId: "p11" },
-            { name: "Luis Navarro", pin: "6060", assignedPatientId: "p12" },
-            // Apoyo / Cubreturnos
-            { name: "Mónica Pineda", pin: "7070", assignedPatientId: "p1" }, 
-            { name: "Néstor Vargas", pin: "8080", assignedPatientId: "p2" }, 
-            { name: "Olivia Rivas", pin: "9090", assignedPatientId: "p3" },  
-            { name: "Pablo Estévez", pin: "1234", assignedPatientId: "p4" }   
+            // Cuidadores con Turno Asignado
+            { name: "Ana Martínez", pin: "1111", assignedPatientId: "p1", assignedShift: "dia" },
+            { name: "Carlos Velázquez", pin: "2222", assignedPatientId: "p2", assignedShift: "noche" }, // Ejemplo Turno Noche
+            { name: "Beatriz Solís", pin: "3333", assignedPatientId: "p3", assignedShift: "dia" },
+            { name: "David López", pin: "4444", assignedPatientId: "p4", assignedShift: "dia" },
+            { name: "Elena Ramírez", pin: "5555", assignedPatientId: "p5", assignedShift: "noche" }, // Ejemplo Turno Noche
+            { name: "Fernando Ruiz", pin: "9999", assignedPatientId: "p6", assignedShift: "dia" },
+            { name: "Gabriela Torres", pin: "1010", assignedPatientId: "p7", assignedShift: "dia" },
+            { name: "Héctor Jiménez", pin: "2020", assignedPatientId: "p8", assignedShift: "noche" }, // Ejemplo Turno Noche
+            { name: "Isabel Castro", pin: "3030", assignedPatientId: "p9", assignedShift: "dia" },
+            { name: "Jorge Medina", pin: "4040", assignedPatientId: "p10", assignedShift: "dia" },
+            { name: "Karla Orozco", pin: "5050", assignedPatientId: "p11", assignedShift: "noche" }, // Ejemplo Turno Noche
+            { name: "Luis Navarro", pin: "6060", assignedPatientId: "p12", assignedShift: "dia" },
+            
+            // Apoyo / Cubreturnos (Se les asigna turno específico según necesidad)
+            { name: "Mónica Pineda", pin: "7070", assignedPatientId: "p1", assignedShift: "noche" }, 
+            { name: "Néstor Vargas", pin: "8080", assignedPatientId: "p2", assignedShift: "dia" }, 
+            { name: "Olivia Rivas", pin: "9090", assignedPatientId: "p3", assignedShift: "noche" },  
+            { name: "Pablo Estévez", pin: "1234", assignedPatientId: "p4", assignedShift: "dia" }   
         ];
 
-        // DATOS ACTUALIZADOS CON RUTINAS DE 12 HORAS
         const PATIENTS = [
             {
                 id: 'p1', 
@@ -590,22 +591,28 @@
 
         function Dashboard({ user, onLogout }) {
             const [selectedPatientId, setSelectedPatientId] = React.useState(null);
-            const [shift, setShift] = React.useState("dia");
+            
+            // INICIALIZACIÓN DEL TURNO BASADA EN CONFIGURACIÓN HTML
+            // Si tiene turno asignado, inicia con él. Si no, por defecto día.
+            const [shift, setShift] = React.useState(user.assignedShift || "dia");
+            
             const [records, setRecords] = React.useState({});
             const [generalObservation, setGeneralObservation] = React.useState("");
             const [status, setStatus] = React.useState("idle"); 
             const [assignments, setAssignments] = React.useState({}); 
 
             const isSupervisor = user.isSupervisor;
-            
-            // Lógica de asignación: Si el usuario tiene un paciente asignado, ese es su default.
             const defaultPatient = user.assignedPatientId ? user.assignedPatientId : PATIENTS[0].id;
+
+            // Determinar qué botones se pueden presionar
+            // Supervisor puede todo. Usuario normal solo su turno asignado.
+            const canSelectDay = isSupervisor || user.assignedShift === 'dia' || !user.assignedShift;
+            const canSelectNight = isSupervisor || user.assignedShift === 'noche' || !user.assignedShift;
 
             const getTodayStr = () => new Date().toISOString().split('T')[0];
             const formatDate = (date) => date ? new Date(date.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A';
 
             React.useEffect(() => {
-                // Si no es supervisor y no hay paciente seleccionado, cargar su paciente asignado
                 if (!isSupervisor && !selectedPatientId) {
                     setSelectedPatientId(defaultPatient);
                 }
@@ -753,10 +760,36 @@
                     
                     {(isSupervisor || !selectedPatientId) && (
                         <div className="p-4 fade-in max-w-xl mx-auto mt-6">
-                            <label className="block text-sm font-semibold mb-3 text-slate-400">Selecciona Horario</label>
+                            <label className="block text-sm font-semibold mb-3 text-slate-400">
+                                {isSupervisor ? 'Selecciona Horario a Supervisar' : 'Tu Horario Asignado'}
+                            </label>
+                            
                             <div className="grid grid-cols-2 gap-4 mb-8">
-                                <button onClick={() => setShift('dia')} className={`p-4 rounded-xl border-2 font-bold transition ${shift === 'dia' ? 'border-[#0DA4BF] bg-[#0DA4BF]/10 text-white' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500'}`}>☀️ Día (12h)</button>
-                                <button onClick={() => setShift('noche')} className={`p-4 rounded-xl border-2 font-bold transition ${shift === 'noche' ? 'border-indigo-400 bg-indigo-900/20 text-white' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500'}`}>🌙 Noche (12h)</button>
+                                <button 
+                                    onClick={() => canSelectDay && setShift('dia')} 
+                                    disabled={!canSelectDay}
+                                    className={`p-4 rounded-xl border-2 font-bold transition flex flex-col items-center justify-center gap-2
+                                        ${shift === 'dia' 
+                                            ? 'border-[#0DA4BF] bg-[#0DA4BF]/20 text-white shadow-[0_0_15px_rgba(13,164,191,0.5)]' 
+                                            : canSelectDay ? 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500' : 'border-slate-800 bg-slate-900 text-slate-700 opacity-40 cursor-not-allowed'
+                                        }`}
+                                >
+                                    <span className="text-2xl">☀️</span>
+                                    <span>Día (12h)</span>
+                                </button>
+                                
+                                <button 
+                                    onClick={() => canSelectNight && setShift('noche')} 
+                                    disabled={!canSelectNight}
+                                    className={`p-4 rounded-xl border-2 font-bold transition flex flex-col items-center justify-center gap-2
+                                        ${shift === 'noche' 
+                                            ? 'border-indigo-400 bg-indigo-500/20 text-white shadow-[0_0_15px_rgba(129,140,248,0.5)]' 
+                                            : canSelectNight ? 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500' : 'border-slate-800 bg-slate-900 text-slate-700 opacity-40 cursor-not-allowed'
+                                        }`}
+                                >
+                                    <span className="text-2xl">🌙</span>
+                                    <span>Noche (12h)</span>
+                                </button>
                             </div>
                         </div>
                     )}
