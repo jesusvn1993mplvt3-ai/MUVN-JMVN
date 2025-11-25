@@ -1,11 +1,24 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MUVN - Acceso Seguro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        muvnBlue: '#0DA4BF',
+                        muvnDark: '#0E0E0E', 
+                    }
+                }
+            }
+        }
+    </script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
@@ -18,9 +31,13 @@
         body { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .dark-input {
+            @apply w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-[#0DA4BF] focus:border-transparent outline-none transition;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
     <div id="root"></div>
 
@@ -41,19 +58,22 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
+        db.settings({ experimentalForceLongPolling: true }); // Para compatibilidad en entornos en vivo
+        firebase.firestore.setLogLevel('debug'); // Para ver logs de firestore
 
         // ---------------------------------------------------------
-        // 2. DATOS (PERSONAL Y PACIENTES)
+        // 2. DATOS (INCLUYE SUPERVISOR)
         // ---------------------------------------------------------
         
-        // Cuidadores con PIN de seguridad
         const CAREGIVERS = [
-            { name: "Ana Martínez", pin: "1111", role: "Enfermera General" },
-            { name: "Carlos Velázquez", pin: "2222", role: "Cuidador Certificado" },
-            { name: "Beatriz Solís", pin: "3333", role: "Auxiliar Geriátrico" },
-            { name: "David López", pin: "4444", role: "Enfermero Intensivista" },
-            { name: "Elena Ramírez", pin: "5555", role: "Cuidadora Nocturna" },
-            { name: "Dr. Fernando Ruiz", pin: "9999", role: "Supervisor Médico" }
+            // Nuevo usuario supervisor
+            { name: "Mario Ulises Vallejo Navarrete", pin: "0000", isSupervisor: true }, 
+            { name: "Ana Martínez", pin: "1111" },
+            { name: "Carlos Velázquez", pin: "2222" },
+            { name: "Beatriz Solís", pin: "3333" },
+            { name: "David López", pin: "4444" },
+            { name: "Elena Ramírez", pin: "5555" },
+            { name: "Fernando Ruiz", pin: "9999" }
         ];
 
         const PATIENTS = [
@@ -61,31 +81,28 @@
                 id: 'p1', 
                 name: "Don Roberto", 
                 condition: "Diabetes Mellitus T2 / Hipertensión",
-                // Ficha Técnica
                 info: {
+                    address: "Calle Roble #123, Col. Centro, Uriangato",
+                    emergency: "Hijo: Luis (Cel: 445-555-9876)",
                     age: "78 años", weight: "82 kg", bloodType: "O+",
-                    allergies: "Penicilina", doctor: "Dr. H. Gtz (555-0123)",
-                    emergency: "Hijo: Luis (555-9876)",
+                    allergies: "Penicilina", doctor: "Dr. H. Gtz (445-555-0123)",
                     diet: "Diabética estricta (baja en sodio/azúcar)"
                 },
                 tasks: {
-                    dia: [ // Turno 12 horas AM
+                    dia: [ 
                         { id: 't_am_1', text: "07:00 - Toma de Glucosa en ayunas", type: "vital" },
                         { id: 't_am_2', text: "07:15 - Insulina NPH (según esquema)", type: "med" },
                         { id: 't_am_3', text: "08:00 - Desayuno", type: "food" },
                         { id: 't_am_4', text: "09:00 - Losartán 50mg", type: "med" },
-                        { id: 't_am_5', text: "11:00 - Colación media mañana", type: "food" },
                         { id: 't_am_6', text: "12:00 - Toma de Presión Arterial", type: "vital" },
-                        { id: 't_am_7', text: "14:00 - Comida Principal", type: "food" },
-                        { id: 't_am_8', text: "16:00 - Caminata asistida (15 min)", type: "physio" }
+                        { id: 't_am_7', text: "14:00 - Comida Principal", type: "food" }
                     ],
-                    noche: [ // Turno 12 horas PM
+                    noche: [ 
                         { id: 't_pm_1', text: "19:00 - Cena ligera", type: "food" },
                         { id: 't_pm_2', text: "20:00 - Toma de Glucosa post-pandrial", type: "vital" },
                         { id: 't_pm_3', text: "21:00 - Insulina Glargina", type: "med" },
                         { id: 't_pm_4', text: "22:00 - Aseo dental y cambio de pañal", type: "hygiene" },
-                        { id: 't_pm_5', text: "00:00 - Ronda de sueño / Monitoreo", type: "check" },
-                        { id: 't_pm_6', text: "04:00 - Cambio de posición (evitar úlceras)", type: "physio" }
+                        { id: 't_pm_5', text: "00:00 - Ronda de sueño / Monitoreo", type: "check" }
                     ]
                 }
             },
@@ -94,9 +111,10 @@
                 name: "Sra. Elena", 
                 condition: "Post-Op Fractura de Cadera / EPOC",
                 info: {
+                    address: "Av. Morelos #45 Int 2, Moroleón",
+                    emergency: "Hija: Clara (Cel: 445-555-1122)",
                     age: "84 años", weight: "60 kg", bloodType: "A-",
                     allergies: "Ninguna conocida", doctor: "Dra. Salas (Trauma)",
-                    emergency: "Hija: Clara (555-1122)",
                     diet: "Alta en fibra y proteínas"
                 },
                 tasks: {
@@ -117,12 +135,12 @@
         ];
 
         // ---------------------------------------------------------
-        // 3. ICONOS SVG
+        // 3. ICONOS
         // ---------------------------------------------------------
         const Icons = {
             Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
-            User: () => <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-            Check: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            MapPin: () => <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
+            Phone: () => <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>,
             File: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
             LogOut: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
             Whatsapp: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
@@ -132,11 +150,12 @@
         // 4. COMPONENTES DE LA INTERFAZ
         // ---------------------------------------------------------
 
-        // --- PANTALLA DE LOGIN ---
         function LoginScreen({ onLogin }) {
             const [selectedUser, setSelectedUser] = React.useState("");
             const [pin, setPin] = React.useState("");
             const [error, setError] = React.useState("");
+
+            const logoUrl = "https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg";
 
             const handleAttempt = (e) => {
                 e.preventDefault();
@@ -150,50 +169,57 @@
             };
 
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-slate-200 to-slate-300">
-                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center fade-in">
-                        <div className="mx-auto bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mb-4">
-                            <Icons.User />
+                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-slate-900 to-slate-800">
+                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center fade-in border border-slate-700">
+                        
+                        {/* Fondo #0E0E0E para el logo */}
+                        <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-muvnBlue">
+                            <img src={logoUrl} alt="MUVN Logo" className="w-full h-full object-contain" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-1">Bienvenido a MUVN</h2>
-                        <p className="text-sm text-slate-500 mb-6">Plataforma de Registro Clínico</p>
+                        
+                        <h2 className="text-2xl font-bold text-white mb-1">Bienvenido a MUVN</h2>
+                        <p className="text-sm text-slate-400 mb-6">Plataforma de Cuidados a Domicilio</p>
 
-                        <form onSubmit={handleAttempt} className="space-y-4">
+                        <form onSubmit={handleAttempt} className="space-y-5">
                             <div className="text-left">
-                                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Seleccionar Personal</label>
+                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Seleccionar Personal</label>
                                 <select 
-                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                                    className="dark-input"
                                     value={selectedUser}
                                     onChange={(e) => {setSelectedUser(e.target.value); setError("");}}
                                 >
-                                    <option value="">-- Elige tu nombre --</option>
-                                    {CAREGIVERS.map(c => <option key={c.pin} value={c.name}>{c.name}</option>)}
+                                    <option value="" className="text-slate-500">-- Elige tu nombre --</option>
+                                    {CAREGIVERS.map(c => (
+                                        <option key={c.pin} value={c.name} className="text-slate-900">
+                                            {c.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
                             {selectedUser && (
                                 <div className="text-left animate-fade-in">
-                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Ingrese PIN (4 dígitos)</label>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ingrese PIN (4 dígitos)</label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                                             <Icons.Lock />
                                         </div>
                                         <input 
                                             type="password" 
                                             maxLength="4"
-                                            className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-lg text-center tracking-widest text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="dark-input pl-10 text-center tracking-widest text-lg"
                                             value={pin}
                                             onChange={(e) => setPin(e.target.value)}
                                             placeholder="••••"
                                         />
                                     </div>
-                                    {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+                                    {error && <p className="text-red-400 text-xs mt-2 text-center font-bold">{error}</p>}
                                 </div>
                             )}
 
                             <button 
                                 disabled={!selectedUser || pin.length < 4}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
+                                className="w-full bg-[#0DA4BF] hover:bg-[#098a9f] text-white font-bold py-3 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
                             >
                                 Ingresar al Turno
                             </button>
@@ -203,48 +229,58 @@
             );
         }
 
-        // --- FICHA TÉCNICA DEL PACIENTE ---
         function TechnicalSheet({ patient }) {
             const { info } = patient;
             return (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                    <div className="bg-slate-800 text-white px-4 py-3 flex items-center gap-2">
+                <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 overflow-hidden mb-6">
+                    <div className="bg-[#0DA4BF] text-white px-4 py-3 flex items-center gap-2">
                         <Icons.File />
-                        <h3 className="font-bold">Ficha Técnica</h3>
+                        <h3 className="font-bold">Ficha Técnica del Paciente</h3>
                     </div>
-                    <div className="p-4 grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="block text-slate-400 text-xs uppercase">Paciente</span>
-                            <span className="font-bold text-slate-800 text-lg">{patient.name}</span>
+                    <div className="p-5 space-y-4 text-sm">
+                        
+                        <div className="grid grid-cols-1 gap-2 pb-3 border-b border-slate-700">
+                            <div>
+                                <span className="block text-slate-400 text-xs uppercase">Paciente</span>
+                                <span className="font-bold text-white text-xl">{patient.name}</span>
+                            </div>
+                             <div>
+                                <span className="block text-slate-400 text-xs uppercase mt-2">Diagnóstico Principal</span>
+                                <span className="font-semibold text-[#0DA4BF] text-md">{patient.condition}</span>
+                            </div>
                         </div>
-                         <div>
-                            <span className="block text-slate-400 text-xs uppercase">Diagnóstico</span>
-                            <span className="font-semibold text-blue-600">{patient.condition}</span>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3 border-b border-slate-700 bg-slate-800/50 p-3 rounded-lg">
+                             <div className="col-span-2 md:col-span-1">
+                                <span className="block text-slate-400 text-xs mb-1"><Icons.MapPin /> Dirección del Domicilio</span>
+                                <span className="font-medium text-white break-words">{info.address}</span>
+                            </div>
+                            <div className="col-span-2 md:col-span-1 bg-red-900/20 p-2 rounded border border-red-900/50">
+                                <span className="block text-red-300 text-xs font-bold mb-1"><Icons.Phone /> Contacto de Emergencia</span>
+                                <span className="font-bold text-red-100 text-base">{info.emergency}</span>
+                            </div>
                         </div>
-                        <div className="col-span-2 border-t pt-2 mt-2 grid grid-cols-2 gap-4">
+
+                        <div className="grid grid-cols-2 gap-4 pt-2">
                              <div>
                                 <span className="block text-slate-400 text-xs">Edad / Peso</span>
-                                <span className="font-medium">{info.age} - {info.weight}</span>
+                                <span className="font-medium text-slate-200">{info.age} - {info.weight}</span>
                             </div>
                             <div>
                                 <span className="block text-slate-400 text-xs">Tipo Sangre</span>
-                                <span className="font-medium">{info.bloodType}</span>
+                                <span className="font-medium text-slate-200">{info.bloodType}</span>
                             </div>
                             <div>
-                                <span className="block text-slate-400 text-xs text-red-400">Alergias</span>
-                                <span className="font-medium text-red-600">{info.allergies}</span>
+                                <span className="block text-slate-400 text-xs text-red-300">Alergias</span>
+                                <span className="font-medium text-red-200">{info.allergies}</span>
                             </div>
-                            <div>
-                                <span className="block text-slate-400 text-xs">Emergencia</span>
-                                <span className="font-medium">{info.emergency}</span>
-                            </div>
-                             <div className="col-span-2">
+                             <div>
                                 <span className="block text-slate-400 text-xs">Médico Tratante</span>
-                                <span className="font-medium">{info.doctor}</span>
+                                <span className="font-medium text-slate-200">{info.doctor}</span>
                             </div>
-                             <div className="col-span-2 bg-yellow-50 p-2 rounded border border-yellow-100">
-                                <span className="block text-yellow-600 text-xs font-bold">Dieta</span>
-                                <span className="text-yellow-800">{info.diet}</span>
+                             <div className="col-span-2 bg-slate-700 p-3 rounded border border-slate-600">
+                                <span className="block text-yellow-400 text-xs font-bold mb-1">Dieta Indicada</span>
+                                <span className="text-slate-200">{info.diet}</span>
                             </div>
                         </div>
                     </div>
@@ -252,19 +288,69 @@
             );
         }
 
-        // --- DASHBOARD PRINCIPAL ---
+        // --- COMPONENTE DE LISTA DE PACIENTES PARA EL SUPERVISOR ---
+        function SupervisorPatientList({ assignments, onSelectPatient, shift }) {
+            return (
+                 <div className="p-4 fade-in max-w-xl mx-auto mt-6">
+                    <h2 className="text-2xl font-bold mb-6 text-white text-center">Lista de Pacientes Asignados</h2>
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
+                        Turno {shift === 'dia' ? '☀️ Día' : '🌙 Noche'}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                        {PATIENTS.map(p => {
+                            const assignment = assignments[p.id] || { caregiver: 'Pendiente de Asignar', lastUpdate: null };
+                            return (
+                                <button 
+                                    key={p.id} 
+                                    onClick={() => onSelectPatient(p.id)}
+                                    className="w-full text-left p-5 bg-slate-800 rounded-xl shadow-lg border border-slate-700 hover:border-[#0DA4BF] transition flex flex-col md:flex-row justify-between items-start md:items-center group"
+                                >
+                                    <div className="flex-1">
+                                        <div className="font-bold text-lg text-white group-hover:text-[#0DA4BF] transition">{p.name}</div>
+                                        <div className="text-xs text-slate-400 mt-1 mb-2">{p.condition}</div>
+                                        <div className="text-sm text-slate-300 font-semibold mt-2">
+                                            Asignado a: <span className="text-[#0DA4BF] font-bold">{assignment.caregiver}</span>
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1">
+                                            Último registro: {assignment.lastUpdate || 'N/A'}
+                                        </div>
+                                    </div>
+                                    <div className="text-slate-600 mt-3 md:mt-0 group-hover:text-[#0DA4BF] text-2xl">➜</div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+
+        // --- DASHBOARD PRINCIPAL (Router) ---
         function Dashboard({ user, onLogout }) {
-            const [selectedPatientId, setSelectedPatientId] = React.useState("");
-            const [shift, setShift] = React.useState("dia"); // dia | noche
+            const [selectedPatientId, setSelectedPatientId] = React.useState(null);
+            const [shift, setShift] = React.useState("dia");
             const [records, setRecords] = React.useState({});
             const [generalObservation, setGeneralObservation] = React.useState("");
             const [status, setStatus] = React.useState("idle"); 
+            const [assignments, setAssignments] = React.useState({}); // Solo para Supervisor
 
-            // Fecha actual
+            const isSupervisor = user.isSupervisor;
+            const patientIdDefault = PATIENTS[0].id; // Don Roberto 'p1'
+
             const getTodayStr = () => new Date().toISOString().split('T')[0];
+            const formatDate = (date) => date ? new Date(date.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A';
 
+            // Efecto: Determinar paciente inicial (solo para cuidadores regulares)
             React.useEffect(() => {
-                if(!selectedPatientId) return;
+                if (!isSupervisor && !selectedPatientId) {
+                    setSelectedPatientId(patientIdDefault);
+                }
+            }, [isSupervisor]);
+
+            // Efecto: Cargar datos (Para cuidador detallado O para Supervisor al seleccionar)
+            React.useEffect(() => {
+                if(!selectedPatientId || isSupervisor) return; // Supervisor carga la lista, no el detalle aquí
 
                 const loadData = async () => {
                     setStatus("loading");
@@ -278,65 +364,106 @@
                             setRecords(data.records || {});
                             setGeneralObservation(data.generalObservation || "");
                         } else {
-                            setRecords({});
-                            setGeneralObservation("");
+                            setRecords({}); setGeneralObservation("");
                         }
                     } catch (e) { console.error(e); } finally { setStatus("idle"); }
                 };
                 loadData();
-            }, [selectedPatientId, shift]);
+            }, [selectedPatientId, shift, isSupervisor]);
+
+            // Efecto: Cargar asignaciones de cuidadores (Solo para Supervisor)
+            React.useEffect(() => {
+                if (!isSupervisor) return;
+
+                const fetchAssignments = async () => {
+                    setStatus("loading_list");
+                    const dateStr = getTodayStr();
+                    try {
+                        // Obtener todos los registros del día actual
+                        const snapshot = await db.collection("registros_diarios")
+                            .where('date', '==', dateStr)
+                            .get();
+                        
+                        const latestAssignments = {};
+
+                        snapshot.docs.forEach(doc => {
+                            const data = doc.data();
+                            const { patientId, caregiver, lastUpdate } = data;
+                            const updateTime = lastUpdate.toDate ? lastUpdate.toDate() : new Date(lastUpdate.seconds * 1000);
+
+                            // Guardar el registro más reciente por paciente y turno
+                            const key = patientId; 
+                            if (!latestAssignments[key] || updateTime > latestAssignments[key].timestamp) {
+                                latestAssignments[key] = {
+                                    caregiver: caregiver,
+                                    lastUpdate: updateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+                                    timestamp: updateTime
+                                };
+                            }
+                        });
+
+                        const patientAssignments = {};
+                        PATIENTS.forEach(p => {
+                             patientAssignments[p.id] = latestAssignments[p.id] || { caregiver: 'Pendiente de Registro', lastUpdate: null };
+                        });
+                        
+                        setAssignments(patientAssignments);
+                        setStatus("idle");
+                    } catch (e) {
+                        console.error("Error al cargar asignaciones:", e);
+                        setStatus("error");
+                    }
+                };
+
+                // No usamos onSnapshot aquí para simplificar la lógica del supervisor, solo get
+                fetchAssignments();
+
+            }, [isSupervisor, shift]);
+
 
             const saveData = async (newRecords, newObs) => {
-                if(!selectedPatientId) return;
+                if(!selectedPatientId || isSupervisor) return; // Supervisor no guarda
+
+                setStatus("saving");
                 const dateStr = getTodayStr();
                 const docId = `${dateStr}_${shift}_${selectedPatientId}`;
-                setStatus("saving");
                 try {
                     await db.collection("registros_diarios").doc(docId).set({
-                        date: dateStr,
-                        shift: shift,
-                        patientId: selectedPatientId,
-                        caregiver: user.name,
-                        lastUpdate: new Date(),
-                        records: newRecords,
-                        generalObservation: newObs
+                        date: dateStr, shift: shift, patientId: selectedPatientId,
+                        caregiver: user.name, 
+                        lastUpdate: firebase.firestore.Timestamp.now(), records: newRecords, generalObservation: newObs
                     }, { merge: true });
-                    setStatus("saved");
-                    setTimeout(() => setStatus("idle"), 2000);
+                    setStatus("saved"); setTimeout(() => setStatus("idle"), 2000);
                 } catch (e) { setStatus("error"); }
             };
 
-            const toggleTask = (taskId, text) => {
+            const toggleTask = (taskId) => {
+                if(isSupervisor) return;
                 const now = new Date();
-                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                 const current = records[taskId] || {};
-                
                 const updatedRec = current.checked 
                     ? { ...current, checked: false, completedAt: null }
                     : { ...current, checked: true, completedAt: timeString };
-
                 const newRecords = { ...records, [taskId]: updatedRec };
                 setRecords(newRecords);
                 saveData(newRecords, generalObservation);
             };
 
             const handleNote = (taskId, note) => {
-                const newRecords = {
-                    ...records,
-                    [taskId]: { ...(records[taskId] || {}), note: note }
-                };
+                 if(isSupervisor) return;
+                const newRecords = { ...records, [taskId]: { ...(records[taskId] || {}), note: note } };
                 setRecords(newRecords);
             };
 
             const handleSendWhatsapp = () => {
+                 if(isSupervisor) return;
                 const p = PATIENTS.find(pt => pt.id === selectedPatientId);
                 const tasks = p.tasks[shift];
-                
-                let msg = `🏥 *REPORTE DE TURNO - MUVN*\n`;
-                msg += `👤 Cuidador: ${user.name}\n📅 Fecha: ${getTodayStr()} | Turno: ${shift.toUpperCase()}\n`;
-                msg += `👴 Paciente: ${p.name}\n\n`;
+                let msg = `🏥 *REPORTE MUVN - CUIDADOS EN CASA*\n`;
+                msg += `👤 ${user.name}\n📅 ${getTodayStr()} | Turno: ${shift.toUpperCase()}\n`;
+                msg += `👴 Paciente: ${p.name}\n📍 Dirección: ${p.info.address}\n\n`;
                 msg += `*ACTIVIDADES REALIZADAS:*\n`;
-
                 tasks.forEach(t => {
                     const rec = records[t.id];
                     if(rec && rec.checked) {
@@ -346,101 +473,108 @@
                         msg += `⭕ ${t.text} (Pendiente)\n`;
                     }
                 });
-
-                if(generalObservation) {
-                    msg += `\n*OBSERVACIONES GENERALES:*\n${generalObservation}\n`;
-                }
-
+                if(generalObservation) msg += `\n*OBSERVACIONES GENERALES:*\n${generalObservation}\n`;
                 window.open(`https://wa.me/524451586270?text=${encodeURIComponent(msg)}`, '_blank');
             };
 
             const currentPatient = PATIENTS.find(p => p.id === selectedPatientId);
 
+            // --- RENDERIZADO DEL DASHBOARD ---
+
             return (
-                <div className="pb-24">
-                    {/* Header */}
-                    <header className="bg-white sticky top-0 z-20 shadow-sm border-b px-4 py-3 flex justify-between items-center">
+                <div className="pb-24 bg-slate-900 min-h-screen">
+                    <header className="bg-slate-800 sticky top-0 z-20 shadow-md border-b border-slate-700 px-4 py-3 flex justify-between items-center">
                         <div>
-                            <h1 className="font-bold text-slate-800">MUVN</h1>
-                            <p className="text-xs text-slate-500">Hola, {user.name.split(' ')[0]}</p>
+                            <h1 className="font-bold text-white flex items-center gap-2">
+                                <span className="text-[#0DA4BF]">MUVN</span> {isSupervisor ? 'Supervisor' : 'App'}
+                            </h1>
+                             <p className="text-xs text-slate-400">{user.name}</p>
                         </div>
-                        <div className="flex gap-2">
-                             {status === 'saving' && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded animate-pulse">Guardando...</span>}
-                             {status === 'saved' && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Guardado</span>}
-                            <button onClick={onLogout} className="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200"><Icons.LogOut /></button>
+                        <div className="flex gap-2 items-center">
+                             {status === 'saving' && <span className="text-xs text-yellow-400 animate-pulse">Guardando...</span>}
+                             {status === 'saved' && <span className="text-xs text-green-400">✓ Guardado</span>}
+                            <button onClick={onLogout} className="p-2 bg-slate-700 rounded-full text-slate-300 hover:bg-slate-600 hover:text-white transition"><Icons.LogOut /></button>
                         </div>
                     </header>
-
-                    {/* Selector Inicial (si no hay paciente seleccionado) */}
-                    {!selectedPatientId ? (
-                        <div className="p-4 fade-in">
-                            <h2 className="text-lg font-bold mb-4">Configurar Turno</h2>
-                            
-                            <label className="block text-sm font-semibold mb-2 text-slate-600">Selecciona Turno</label>
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <button onClick={() => setShift('dia')} className={`p-4 rounded-xl border-2 font-bold ${shift === 'dia' ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white'}`}>☀️ Día (12h)</button>
-                                <button onClick={() => setShift('noche')} className={`p-4 rounded-xl border-2 font-bold ${shift === 'noche' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white'}`}>🌙 Noche (12h)</button>
-                            </div>
-
-                            <label className="block text-sm font-semibold mb-2 text-slate-600">Selecciona Paciente</label>
-                            <div className="space-y-3">
-                                {PATIENTS.map(p => (
-                                    <button 
-                                        key={p.id} 
-                                        onClick={() => setSelectedPatientId(p.id)}
-                                        className="w-full text-left p-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-400 transition flex justify-between items-center"
-                                    >
-                                        <div>
-                                            <div className="font-bold text-lg">{p.name}</div>
-                                            <div className="text-xs text-slate-500">{p.condition}</div>
-                                        </div>
-                                        <div className="text-blue-500">➜</div>
-                                    </button>
-                                ))}
+                    
+                    {/* Selectores de Turno para Supervisor o Cuidador que regresa a la lista */}
+                    {(isSupervisor || !selectedPatientId) && (
+                        <div className="p-4 fade-in max-w-xl mx-auto mt-6">
+                            <label className="block text-sm font-semibold mb-3 text-slate-400">Selecciona Horario</label>
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <button onClick={() => setShift('dia')} className={`p-4 rounded-xl border-2 font-bold transition ${shift === 'dia' ? 'border-[#0DA4BF] bg-[#0DA4BF]/10 text-white' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500'}`}>☀️ Día (12h)</button>
+                                <button onClick={() => setShift('noche')} className={`p-4 rounded-xl border-2 font-bold transition ${shift === 'noche' ? 'border-indigo-400 bg-indigo-900/20 text-white' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500'}`}>🌙 Noche (12h)</button>
                             </div>
                         </div>
-                    ) : (
-                        // VISTA DEL TURNO ACTIVO
-                        <div className="p-4 max-w-2xl mx-auto fade-in">
-                            <button onClick={() => setSelectedPatientId("")} className="text-sm text-blue-600 mb-4 flex items-center gap-1">
-                                ← Cambiar Paciente
-                            </button>
-                            
-                            {/* Ficha Técnica */}
-                            <TechnicalSheet patient={currentPatient} />
+                    )}
 
-                            {/* Lista de Tareas */}
-                            <div className="mb-6">
-                                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                                    {shift === 'dia' ? '☀️ Tareas Turno Matutino' : '🌙 Tareas Turno Nocturno'}
+
+                    {/* VISTA DEL SUPERVISOR (LISTA) */}
+                    {isSupervisor && !selectedPatientId && (
+                        status === 'loading_list' ? (
+                            <div className="text-center p-8 text-lg text-[#0DA4BF]">Cargando asignaciones...</div>
+                        ) : (
+                            <SupervisorPatientList 
+                                assignments={assignments} 
+                                onSelectPatient={setSelectedPatientId}
+                                shift={shift}
+                            />
+                        )
+                    )}
+
+                    {/* VISTA DETALLADA DEL PACIENTE (Cuidador Regular o Supervisor que ha seleccionado) */}
+                    {selectedPatientId && currentPatient && (
+                        <div className="p-4 max-w-2xl mx-auto fade-in">
+                            {(isSupervisor || selectedPatientId !== patientIdDefault) && (
+                                <button onClick={() => setSelectedPatientId(null)} className="text-sm text-[#0DA4BF] hover:text-white mb-4 flex items-center gap-1 transition">
+                                    ← Volver a la lista
+                                </button>
+                            )}
+
+                            <TechnicalSheet patient={currentPatient} />
+                            
+                            {/* Mostrar cuidador asignado solo si el supervisor está viendo esta ficha */}
+                            {isSupervisor && assignments[selectedPatientId] && (
+                                <div className="bg-slate-700 p-4 rounded-xl border border-slate-600 mb-6">
+                                    <span className="block text-xs font-bold uppercase text-slate-400">Cuidador Registrando el Turno Actual:</span>
+                                    <span className="font-bold text-lg text-white">{assignments[selectedPatientId].caregiver}</span>
+                                    <span className="text-xs text-slate-400 ml-2">(Último registro: {assignments[selectedPatientId].lastUpdate})</span>
+                                </div>
+                            )}
+
+                            <div className="mb-8">
+                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
+                                    {shift === 'dia' ? '☀️ Actividades Turno Matutino' : '🌙 Actividades Turno Nocturno'}
                                 </h3>
                                 <div className="space-y-3">
                                     {currentPatient.tasks[shift].map(task => {
                                         const rec = records[task.id] || {};
                                         return (
-                                            <div key={task.id} className={`p-3 rounded-lg border transition-all ${rec.checked ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200 shadow-sm'}`}>
-                                                <div className="flex items-start gap-3">
+                                            <div key={task.id} className={`p-4 rounded-lg border transition-all ${rec.checked ? 'bg-slate-800/50 border-[#0DA4BF]/50' : 'bg-slate-800 border-slate-700 shadow-sm'}`}>
+                                                <div className="flex items-start gap-4">
                                                     <div className="pt-1">
                                                         <input 
                                                             type="checkbox" 
                                                             checked={rec.checked || false} 
-                                                            onChange={() => toggleTask(task.id, task.text)}
-                                                            className="w-6 h-6 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                                                            onChange={() => toggleTask(task.id)}
+                                                            disabled={isSupervisor} // Supervisor no puede interactuar con el checkbox
+                                                            className={`w-6 h-6 accent-[#0DA4BF] cursor-pointer rounded focus:ring-offset-slate-800 focus:ring-[#0DA4BF] ${isSupervisor ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <span className={`text-sm font-medium ${rec.checked ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                                                        <span className={`text-base font-medium ${rec.checked ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
                                                             {task.text}
                                                         </span>
-                                                        {rec.checked && <div className="text-xs text-green-600 font-bold mt-1">Realizado a las {rec.completedAt}</div>}
+                                                        {rec.checked && <div className="text-xs text-[#0DA4BF] font-bold mt-1">Completado: {rec.completedAt}</div>}
                                                         
                                                         <input 
                                                             type="text" 
-                                                            placeholder="Agregar nota rápida..." 
-                                                            className="mt-2 w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-300"
+                                                            placeholder={isSupervisor ? "Solo lectura" : "Notas breves..."} 
+                                                            className={`mt-3 w-full text-sm p-2 rounded text-slate-200 focus:outline-none focus:border-[#0DA4BF] transition ${isSupervisor ? 'bg-slate-900 border-slate-700/50 cursor-default' : 'bg-slate-900 border-slate-700'}`}
                                                             value={rec.note || ""}
                                                             onChange={(e) => handleNote(task.id, e.target.value)}
                                                             onBlur={() => saveData(records, generalObservation)}
+                                                            disabled={isSupervisor}
                                                         />
                                                     </div>
                                                 </div>
@@ -450,28 +584,30 @@
                                 </div>
                             </div>
 
-                            {/* Observaciones Generales */}
-                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-20">
-                                <h3 className="font-bold mb-2 text-sm uppercase text-slate-500">Observaciones Generales y Sugerencias</h3>
+                            <div className="bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-700 mb-20">
+                                <h3 className="font-bold mb-3 text-sm uppercase text-slate-400">Bitácora del Turno / Eventualidades</h3>
                                 <textarea 
-                                    className="w-full p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    rows="4"
-                                    placeholder="Escribe aquí cualquier eventualidad del turno..."
+                                    className={`w-full p-4 rounded-lg text-slate-200 text-sm focus:ring-2 focus:ring-[#0DA4BF] outline-none transition resize-none ${isSupervisor ? 'bg-slate-900 border-slate-700/50 cursor-default' : 'bg-slate-900 border-slate-700 focus:border-transparent'}`}
+                                    rows="5"
+                                    placeholder={isSupervisor ? "Solo lectura" : "Describe aquí cómo transcurrió el turno, estado de ánimo del paciente, incidentes, etc..."}
                                     value={generalObservation}
                                     onChange={(e) => setGeneralObservation(e.target.value)}
                                     onBlur={() => saveData(records, generalObservation)}
+                                    disabled={isSupervisor}
                                 ></textarea>
                             </div>
 
-                            {/* Botón Flotante WhatsApp */}
-                            <div className="fixed bottom-0 left-0 w-full p-4 bg-white/90 backdrop-blur border-t border-slate-200">
-                                <button 
-                                    onClick={handleSendWhatsapp}
-                                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
-                                >
-                                    <Icons.Whatsapp /> Enviar Reporte Final
-                                </button>
-                            </div>
+                            {/* El botón de WhatsApp solo aparece para Cuidadores Regulares */}
+                            {!isSupervisor && (
+                                <div className="fixed bottom-0 left-0 w-full p-4 bg-slate-900/80 backdrop-blur-md border-t border-slate-800">
+                                    <button 
+                                        onClick={handleSendWhatsapp}
+                                        className="w-full max-w-2xl mx-auto bg-[#0DA4BF] hover:bg-[#098a9f] text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-3 transition text-lg"
+                                    >
+                                        <Icons.Whatsapp /> Finalizar Turno y Enviar Reporte
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -481,24 +617,9 @@
         // --- APP PRINCIPAL ---
         function App() {
             const [user, setUser] = React.useState(null);
-
-            // Verificar si hay sesión guardada (opcional, para simplicidad iniciamos siempre en login)
-            // Para demo:
-            const handleLogin = (loggedUser) => {
-                setUser(loggedUser);
-            };
-
-            const handleLogout = () => {
-                setUser(null);
-            };
-
             return (
-                <div className="max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl overflow-hidden relative">
-                    {!user ? (
-                        <LoginScreen onLogin={handleLogin} />
-                    ) : (
-                        <Dashboard user={user} onLogout={handleLogout} />
-                    )}
+                <div className="min-h-screen bg-slate-900 text-slate-100 relative">
+                    {!user ? <LoginScreen onLogin={setUser} /> : <Dashboard user={user} onLogout={() => setUser(null)} />}
                 </div>
             );
         }
