@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUVN - Acceso Seguro</title>
+    <title>MUVN - Gestión Integral</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,41 +12,57 @@
             theme: {
                 extend: {
                     colors: {
-                        muvnBlue: '#0DA4BF',
+                        muvnTeal: '#0AB2BB',
                         muvnDark: '#0E0E0E', 
                     }
                 }
             }
         }
     </script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Inputs legibles: Fondo blanco, texto negro */
-        .dark-input {
-            @apply w-full p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#0DA4BF] focus:border-transparent outline-none transition font-medium;
-        }
+        .custom-input { display: block; width: 100%; padding: 0.75rem; background-color: white; border: 1px solid #d1d5db; border-radius: 0.75rem; color: #374151; font-weight: 600; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); appearance: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
-    <div id="root"></div>
+    <div id="root">
+        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #0AB2BB;">
+            <h2 style="font-size: 24px; font-weight: bold;">Cargando MUVN...</h2>
+            <p style="color: #64748b;">Esto debería cargar en segundos. Si no, revisa la Consola (F12).</p>
+        </div>
+    </div>
 
-    <script type="text/babel">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('root').innerHTML = `
+                <div style="padding: 20px; color: #ff6b6b; background: #1a202c; height: 100vh;">
+                    <h1 style="font-size: 24px; margin-bottom: 10px;">⚠️ ¡ERROR CRÍTICO!</h1>
+                    <p>La aplicación falló al iniciarse. Esto es un error de código o configuración.</p>
+                    <p><strong>Mensaje:</strong> ${message}</p>
+                    <p><strong>Línea:</strong> ${lineno}</p>
+                    <p style="margin-top: 20px; color: #94a3b8;">Revisa que las reglas de Firebase estén en "allow read, write: if true;"</p>
+                </div>
+            `;
+        };
+    </script>
+
+    <script>
         // ---------------------------------------------------------
-        // 1. CONFIGURACIÓN DE FIREBASE
+        // 1. CONFIGURACIÓN FIREBASE
         // ---------------------------------------------------------
-        const firebaseConfig = {
+        var firebaseConfig = {
             apiKey: "AIzaSyDmf2tlJYR7cP_vxv66tVozQDBFehURGXM",
             authDomain: "data-d064b.firebaseapp.com",
             projectId: "data-d064b",
@@ -55,857 +71,747 @@
             appId: "1:15120958868:web:ec1d059d08f631bb81fb81"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+            db.settings({ experimentalForceLongPolling: true }); 
+        } catch (error) {
+            document.getElementById('root').innerHTML = "<h3 style='color:red; p:10px'>Error conectando a Firebase: " + error.message + "</h3>";
+            throw error;
         }
-        const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true }); 
-        firebase.firestore.setLogLevel('silent');
 
         // ---------------------------------------------------------
-        // 2. DATOS (Cuidadores vinculados a Pacientes y TURNOS)
+        // 2. DATOS
         // ---------------------------------------------------------
-        
-        // AQUI ES DONDE SE CONFIGURA EL TURNO (assignedShift: 'dia' o 'noche')
-        const CAREGIVERS = [
-            // Supervisor (Sin restricción de turno)
-            { name: "Mario Ulises Vallejo Navarrete", pin: "0000", isSupervisor: true }, 
-            
-            // Cuidadores con Turno Asignado
-            { name: "Ana Martínez", pin: "1111", assignedPatientId: "p1", assignedShift: "noche" },
-            { name: "Carlos Velázquez", pin: "2222", assignedPatientId: "p2", assignedShift: "noche" }, // Ejemplo Turno Noche
-            { name: "Beatriz Solís", pin: "3333", assignedPatientId: "p3", assignedShift: "dia" },
-            { name: "David López", pin: "4444", assignedPatientId: "p4", assignedShift: "dia" },
-            { name: "Elena Ramírez", pin: "5555", assignedPatientId: "p5", assignedShift: "noche" }, // Ejemplo Turno Noche
-            { name: "Fernando Ruiz", pin: "9999", assignedPatientId: "p6", assignedShift: "dia" },
-            { name: "Gabriela Torres", pin: "1010", assignedPatientId: "p7", assignedShift: "dia" },
-            { name: "Héctor Jiménez", pin: "2020", assignedPatientId: "p8", assignedShift: "noche" }, // Ejemplo Turno Noche
-            { name: "Isabel Castro", pin: "3030", assignedPatientId: "p9", assignedShift: "dia" },
-            { name: "Jorge Medina", pin: "4040", assignedPatientId: "p10", assignedShift: "dia" },
-            { name: "Karla Orozco", pin: "5050", assignedPatientId: "p11", assignedShift: "noche" }, // Ejemplo Turno Noche
-            { name: "Luis Navarro", pin: "6060", assignedPatientId: "p12", assignedShift: "dia" },
-            
-            // Apoyo / Cubreturnos (Se les asigna turno específico según necesidad)
-            { name: "Mónica Pineda", pin: "7070", assignedPatientId: "p1", assignedShift: "noche" }, 
-            { name: "Néstor Vargas", pin: "8080", assignedPatientId: "p2", assignedShift: "dia" }, 
-            { name: "Olivia Rivas", pin: "9090", assignedPatientId: "p3", assignedShift: "noche" },  
-            { name: "Pablo Estévez", pin: "1234", assignedPatientId: "p4", assignedShift: "dia" }   
+        var STAFF = [
+            { name: "Mario Ulises Vallejo Navarrete", pin: "0000", role: "admin" }, 
+            { name: "Ana Martínez", pin: "1111", role: "caregiver" },
+            { name: "Carlos Velázquez", pin: "2222", role: "caregiver" },
+            { name: "Beatriz Solís", pin: "3333", role: "caregiver" },
+            { name: "David López", pin: "4444", role: "caregiver" },
+            { name: "Elena Ramírez", pin: "5555", role: "caregiver" },
+            { name: "Fernando Ruiz", pin: "9999", role: "caregiver" },
+            { name: "Gabriela Torres", pin: "1010", role: "caregiver" },
+            { name: "Héctor Jiménez", pin: "2020", role: "caregiver" },
+            { name: "Isabel Castro", pin: "3030", role: "caregiver" },
+            { name: "Jorge Medina", pin: "4040", role: "caregiver" },
+            { name: "Karla Orozco", pin: "5050", role: "caregiver" },
+            { name: "Luis Navarro", pin: "6060", role: "caregiver" },
+            { name: "Mónica Pineda", pin: "7070", role: "caregiver" },
+            { name: "Néstor Vargas", pin: "8080", role: "caregiver" },
+            { name: "Olivia Rivas", pin: "9090", role: "caregiver" },
+            { name: "Pablo Estévez", pin: "1234", role: "caregiver" }
         ];
 
-        const PATIENTS = [
-            {
-                id: 'p1', 
-                name: "Don Roberto", 
-                condition: "Diabetes T2 / Hipertensión",
-                info: { address: "Calle Roble #123", emergency: "Hijo: Luis (445-555-9876)", age: "78", weight: "82kg", bloodType: "O+", allergies: "Penicilina", doctor: "Dr. Gtz", diet: "Diabética" },
-                tasks: {
-                    dia: [ 
-                        { id: 'p1_d1', text: "07:00 - Toma de Glucosa en ayunas", type: "vital" },
-                        { id: 'p1_d2', text: "07:30 - Insulina NPH / Medicamentos AM", type: "med" },
-                        { id: 'p1_d3', text: "08:30 - Desayuno completo", type: "food" },
-                        { id: 'p1_d4', text: "10:00 - Baño de regadera y humectación", type: "hygiene" },
-                        { id: 'p1_d5', text: "12:00 - Colación matutina y Toma de PA", type: "food" },
-                        { id: 'p1_d6', text: "14:00 - Comida principal", type: "food" },
-                        { id: 'p1_d7', text: "16:00 - Caminata 20 min (si el clima permite)", type: "physio" },
-                        { id: 'p1_d8', text: "18:00 - Merienda ligera", type: "food" }
-                    ],
-                    noche: [ 
-                        { id: 'p1_n1', text: "19:00 - Cena ligera", type: "food" },
-                        { id: 'p1_n2', text: "20:00 - Glucosa post-pandrial y Signos", type: "vital" },
-                        { id: 'p1_n3', text: "21:00 - Insulina Glargina y Meds Nocturnos", type: "med" },
-                        { id: 'p1_n4', text: "22:00 - Aseo dental y preparación cama", type: "hygiene" },
-                        { id: 'p1_n5', text: "00:00 - Ronda de monitoreo sueño", type: "check" },
-                        { id: 'p1_n6', text: "03:00 - Ronda de monitoreo / Ida al baño", type: "check" },
-                        { id: 'p1_n7', text: "06:00 - Preparar insumos glucosa AM", type: "check" }
-                    ]
-                }
+        var PATIENTS = [
+            { id: 'p1', name: "Don Roberto", condition: "Diabetes T2 / Hipertensión", info: { address: "Calle Roble #123", emergency: "Hijo: Luis", age: "78", weight: "82kg", bloodType: "O+", allergies: "Penicilina", doctor: "Dr. Gtz", diet: "Diabética" }, tasks: { dia: [{id:'p1d1', text:'Glucosa', type:'vital'}, {id:'p1d2', text:'Desayuno', type:'food'}], noche: [{id:'p1n1', text:'Cena', type:'food'}, {id:'p1n2', text:'Glucosa', type:'vital'}] } },
+            { id: 'p2', name: "Sra. Elena", condition: "Post-Op Cadera", info: { address: "Av. Morelos #45", emergency: "Hija: Clara", age: "84", weight: "60kg", bloodType: "A-", allergies: "Ninguna", doctor: "Dra. Salas", diet: "Alta fibra" }, tasks: { dia: [{id:'p2d1', text:'Nebulización', type:'med'}, {id:'p2d2', text:'Curación', type:'cure'}], noche: [{id:'p2n1', text:'Oxígeno', type:'med'}] } },
+            { id: 'p3', name: "Don Jorge", condition: "Parkinson", info: { address: "Calle Madero #88", emergency: "Esposa: Rosa", age: "75", weight: "70kg", bloodType: "B+", allergies: "Sulfa", doctor: "Dr. Neuro", diet: "Papilla" }, tasks: { dia: [{id:'p3d1', text:'Levodopa', type:'med'}], noche: [{id:'p3n1', text:'Levodopa', type:'med'}] } },
+            { id: 'p4', name: "Sra. Margarita", condition: "Alzheimer", info: { address: "Portal Zauco #12", emergency: "Hijo: Pedro", age: "81", weight: "55kg", bloodType: "O-", allergies: "Polen", doctor: "Dr. Psique", diet: "Normal" }, tasks: { dia: [{id:'p4d1', text:'Memantina', type:'med'}], noche: [{id:'p4n1', text:'Quetiapina', type:'med'}] } },
+            { id: 'p5', name: "Don Felipe", condition: "EVC / Hemiplejia", info: { address: "16 de Septiembre", emergency: "Nieta: Ana", age: "69", weight: "75kg", bloodType: "A+", allergies: "Aspirina", doctor: "Dr. Vascular", diet: "Blanda" }, tasks: { dia: [{id:'p5d1', text:'Movilización', type:'physio'}], noche: [{id:'p5n1', text:'Cambio Pañal', type:'hygiene'}] } },
+            { id: 'p6', name: "Sra. Carmen", condition: "Artritis Reumatoide", info: { address: "Col. La Joya", emergency: "Hija: Sofia", age: "72", weight: "65kg", bloodType: "B-", allergies: "Ninguna", doctor: "Dr. Reuma", diet: "Antiinflamatoria" }, tasks: { dia: [{id:'p6d1', text:'Prednisona', type:'med'}], noche: [{id:'p6n1', text:'Tramadol', type:'med'}] } },
+            { id: 'p7', name: "Don Luis", condition: "Renal (Diálisis)", info: { address: "Pípila #8", emergency: "Hermano: Juan", age: "65", weight: "68kg", bloodType: "AB+", allergies: "Yodo", doctor: "Dr. Nefro", diet: "Renal" }, tasks: { dia: [{id:'p7d1', text:'Diálisis', type:'cure'}], noche: [{id:'p7n1', text:'Diálisis', type:'cure'}] } },
+            { id: 'p8', name: "Sra. Rosa", condition: "Insuficiencia Cardíaca", info: { address: "Las Flores #100", emergency: "Vecina: Lupe", age: "79", weight: "58kg", bloodType: "O+", allergies: "Látex", doctor: "Dr. Cardio", diet: "Sin sal" }, tasks: { dia: [{id:'p8d1', text:'Furosemida', type:'med'}], noche: [{id:'p8n1', text:'Fowler', type:'physio'}] } },
+            { id: 'p9', name: "Don Antonio", condition: "EPOC", info: { address: "Hidalgo #33", emergency: "Hijo: Toño", age: "82", weight: "62kg", bloodType: "A+", allergies: "Polvo", doctor: "Dr. Neumo", diet: "Fraccionada" }, tasks: { dia: [{id:'p9d1', text:'Inhaladores', type:'med'}], noche: [{id:'p9n1', text:'Nebulización', type:'med'}] } },
+            { id: 'p10', name: "Sra. Teresa", condition: "Demencia", info: { address: "Privada del Sol", emergency: "Hija: Maria", age: "88", weight: "48kg", bloodType: "O-", allergies: "Ninguna", doctor: "Dr. Geria", diet: "Alta calórica" }, tasks: { dia: [{id:'p10d1', text:'Caminata', type:'physio'}], noche: [{id:'p10n1', text:'Barandales', type:'check'}] } },
+            { id: 'p11', name: "Don Miguel", condition: "Ceguera / Diabetes", info: { address: "5 de Mayo", emergency: "Esposa: Laura", age: "70", weight: "85kg", bloodType: "B+", allergies: "Mariscos", doctor: "Dr. Oftalmo", diet: "Diabética" }, tasks: { dia: [{id:'p11d1', text:'Insulina', type:'med'}], noche: [{id:'p11n1', text:'Glucosa', type:'vital'}] } },
+            { id: 'p12', name: "Sra. Lupita", condition: "Postración", info: { address: "Calle Obregón", emergency: "Hijo: Beto", age: "90", weight: "45kg", bloodType: "A-", allergies: "Adhesivo", doctor: "Dr. Heridas", diet: "Sonda" }, tasks: { dia: [{id:'p12d1', text:'Sonda', type:'food'}], noche: [{id:'p12n1', text:'Movilización', type:'physio'}] } }
+        ];
+
+        // ---------------------------------------------------------
+        // 3. HELPERS
+        // ---------------------------------------------------------
+        var Icons = {
+            Lock: function Lock() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-5 h-5",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("rect", {
+                    x: "3",
+                    y: "11",
+                    width: "18",
+                    height: "11",
+                    rx: "2",
+                    ry: "2"
+                }), /*#__PURE__*/React.createElement("path", {
+                    d: "M7 11V7a5 5 0 0 1 10 0v4"
+                }));
             },
-            {
-                id: 'p2', 
-                name: "Sra. Elena", 
-                condition: "Post-Op Cadera / EPOC",
-                info: { address: "Av. Morelos #45", emergency: "Hija: Clara (445-555-1122)", age: "84", weight: "60kg", bloodType: "A-", allergies: "Ninguna", doctor: "Dra. Salas", diet: "Alta fibra" },
-                tasks: {
-                    dia: [
-                        { id: 'p2_d1', text: "08:00 - Nebulización Matutina y Signos", type: "med" },
-                        { id: 'p2_d2', text: "09:00 - Desayuno asistido", type: "food" },
-                        { id: 'p2_d3', text: "10:00 - Baño de esponja (cuidar apósito)", type: "hygiene" },
-                        { id: 'p2_d4', text: "11:00 - Curación herida quirúrgica", type: "cure" },
-                        { id: 'p2_d5', text: "13:00 - Ejercicios respiratorios / Espirómetro", type: "physio" },
-                        { id: 'p2_d6', text: "14:30 - Comida y Medicamento dolor", type: "food" },
-                        { id: 'p2_d7', text: "17:00 - Movilización a reposet", type: "physio" },
-                        { id: 'p2_d8', text: "18:30 - Nebulización Vespertina", type: "med" }
-                    ],
-                    noche: [
-                        { id: 'p2_n1', text: "20:00 - Cena y Oxígeno (2L/min) continuo", type: "med" },
-                        { id: 'p2_n2', text: "22:00 - Aseo, Cambio Pañal, Medias compresión", type: "hygiene" },
-                        { id: 'p2_n3', text: "00:00 - Cambio de posición (Decúbito Lateral)", type: "physio" },
-                        { id: 'p2_n4', text: "02:00 - Revisión Saturación O2 y Pañal", type: "vital" },
-                        { id: 'p2_n5', text: "04:00 - Cambio de posición", type: "physio" },
-                        { id: 'p2_n6', text: "06:00 - Retirar medias y lubricar piel", type: "cure" }
-                    ]
-                }
+            User: function User() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-5 h-5",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("path", {
+                    d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                }), /*#__PURE__*/React.createElement("circle", {
+                    cx: "12",
+                    cy: "7",
+                    r: "4"
+                }));
             },
-            {
-                id: 'p3',
-                name: "Don Jorge",
-                condition: "Parkinson Avanzado",
-                info: { address: "Calle Madero #88", emergency: "Esposa: Rosa (445-123-4567)", age: "75", weight: "70kg", bloodType: "B+", allergies: "Sulfa", doctor: "Dr. Neuro", diet: "Papilla" },
-                tasks: {
-                    dia: [
-                        { id: 'p3_d1', text: "07:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
-                        { id: 'p3_d2', text: "08:00 - Desayuno asistido (paciencia)", type: "food" },
-                        { id: 'p3_d3', text: "09:30 - Baño silla y afeitado", type: "hygiene" },
-                        { id: 'p3_d4', text: "11:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
-                        { id: 'p3_d5', text: "12:00 - Terapia de marcha / Movilidad", type: "physio" },
-                        { id: 'p3_d6', text: "14:00 - Comida (textura papilla) e Hidratación", type: "food" },
-                        { id: 'p3_d7', text: "15:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
-                        { id: 'p3_d8', text: "18:00 - Aseo perineal y cambio ropa", type: "hygiene" }
-                    ],
-                    noche: [
-                        { id: 'p3_n1', text: "19:00 - Levodopa/Carbidopa (ESTRICTO)", type: "med" },
-                        { id: 'p3_n2', text: "19:30 - Cena ligera asistida", type: "food" },
-                        { id: 'p3_n3', text: "21:00 - Preparación dormir / Aseo bucal", type: "hygiene" },
-                        { id: 'p3_n4', text: "23:00 - Revisión rigidez y postura", type: "check" },
-                        { id: 'p3_n5', text: "02:00 - Asistencia orinal / Pañal", type: "hygiene" },
-                        { id: 'p3_n6', text: "05:00 - Cambio de postura", type: "physio" },
-                        { id: 'p3_n7', text: "07:00 - Entrega de turno y Meds AM", type: "check" }
-                    ]
-                }
-            },
-            {
-                id: 'p4',
-                name: "Sra. Margarita",
-                condition: "Alzheimer (Fase Media)",
-                info: { address: "Portal Zauco #12", emergency: "Hijo: Pedro (445-987-6543)", age: "81", weight: "55kg", bloodType: "O-", allergies: "Polen", doctor: "Dr. Psique", diet: "Normal" },
-                tasks: {
-                    dia: [
-                        { id: 'p4_d1', text: "08:00 - Despertar suave y Memantina", type: "med" },
-                        { id: 'p4_d2', text: "09:00 - Desayuno y Socialización", type: "food" },
-                        { id: 'p4_d3', text: "10:30 - Aseo personal supervisado", type: "hygiene" },
-                        { id: 'p4_d4', text: "12:00 - Actividad cognitiva (música/fotos)", type: "physio" },
-                        { id: 'p4_d5', text: "14:00 - Comida principal", type: "food" },
-                        { id: 'p4_d6', text: "16:00 - Siesta corta (máx 30 min)", type: "check" },
-                        { id: 'p4_d7', text: "17:00 - Hidratación y caminata patio", type: "physio" },
-                        { id: 'p4_d8', text: "18:30 - Inicio protocolo calma (bajar luces)", type: "check" }
-                    ],
-                    noche: [
-                        { id: 'p4_n1', text: "19:30 - Cena y Quetiapina 25mg", type: "med" },
-                        { id: 'p4_n2', text: "20:30 - Acompañamiento al baño y pijama", type: "hygiene" },
-                        { id: 'p4_n3', text: "22:00 - Asegurar puertas y ventanas", type: "check" },
-                        { id: 'p4_n4', text: "00:00 - Monitoreo visual (sin despertar)", type: "check" },
-                        { id: 'p4_n5', text: "03:00 - Asistencia baño si despierta", type: "hygiene" },
-                        { id: 'p4_n6', text: "06:00 - Monitoreo final", type: "check" }
-                    ]
-                }
-            },
-            {
-                id: 'p5',
-                name: "Don Felipe",
-                condition: "Secuelas EVC / Hemiplejia",
-                info: { address: "Calle 16 de Septiembre", emergency: "Nieta: Ana (445-111-2222)", age: "69", weight: "75kg", bloodType: "A+", allergies: "Aspirina", doctor: "Dr. Vascular", diet: "Blanda" },
-                tasks: {
-                    dia: [
-                        { id: 'p5_d1', text: "08:00 - Signos Vitales y Movilización cama", type: "physio" },
-                        { id: 'p5_d2', text: "09:00 - Desayuno y Medicamentos (Antihipertensivo)", type: "med" },
-                        { id: 'p5_d3', text: "10:30 - Baño de regadera (silla ruedas)", type: "hygiene" },
-                        { id: 'p5_d4', text: "12:00 - Ejercicios pasivos lado afectado", type: "physio" },
-                        { id: 'p5_d5', text: "14:00 - Comida y Aseo bucal posterior", type: "food" },
-                        { id: 'p5_d6', text: "16:00 - Cambio pañal y revisión piel sacra", type: "hygiene" },
-                        { id: 'p5_d7', text: "18:00 - Sentar en reposet 1 hora", type: "physio" }
-                    ],
-                    noche: [
-                        { id: 'p5_n1', text: "20:00 - Cena y Cambio de pañal", type: "hygiene" },
-                        { id: 'p5_n2', text: "22:00 - Hidratación piel y acomodo almohadas", type: "cure" },
-                        { id: 'p5_n3', text: "00:00 - CAMBIO POSTURA (Derecho)", type: "physio" },
-                        { id: 'p5_n4', text: "03:00 - CAMBIO POSTURA (Izquierdo) y Pañal", type: "physio" },
-                        { id: 'p5_n5', text: "06:00 - CAMBIO POSTURA (Supino) y Sábanas", type: "physio" }
-                    ]
-                }
-            },
-            {
-                id: 'p6',
-                name: "Sra. Carmen",
-                condition: "Artritis Reumatoide Severa",
-                info: { address: "Col. La Joya #55", emergency: "Hija: Sofia (445-333-4444)", age: "72", weight: "65kg", bloodType: "B-", allergies: "Ninguna", doctor: "Dr. Reuma", diet: "Antiinflamatoria" },
-                tasks: {
-                    dia: [
-                        { id: 'p6_d1', text: "08:00 - Prednisona y Analgésico (antes de mover)", type: "med" },
-                        { id: 'p6_d2', text: "09:00 - Desayuno y Compresas tibias manos", type: "cure" },
-                        { id: 'p6_d3', text: "11:00 - Ayuda baño agua caliente (rigidez)", type: "hygiene" },
-                        { id: 'p6_d4', text: "13:00 - Movilización suave articulaciones", type: "physio" },
-                        { id: 'p6_d5', text: "14:30 - Comida (dieta mediterránea)", type: "food" },
-                        { id: 'p6_d6', text: "17:00 - Terapia ocupacional ligera", type: "physio" },
-                        { id: 'p6_d7', text: "19:00 - Preparar medicación nocturna", type: "med" }
-                    ],
-                    noche: [
-                        { id: 'p6_n1', text: "20:00 - Cena y Tramadol gotas", type: "med" },
-                        { id: 'p6_n2', text: "21:30 - Masaje suave con pomada y pijama", type: "physio" },
-                        { id: 'p6_n3', text: "23:00 - Acomodo almohadas entre piernas", type: "check" },
-                        { id: 'p6_n4', text: "02:00 - Asistencia al baño (riesgo caídas)", type: "hygiene" },
-                        { id: 'p6_n5', text: "05:00 - Revisión confort / Cobijas", type: "check" }
-                    ]
-                }
-            },
-            {
-                id: 'p7',
-                name: "Don Luis",
-                condition: "Insuficiencia Renal (Diálisis)",
-                info: { address: "Calle Pípila #8", emergency: "Hermano: Juan (445-555-7777)", age: "65", weight: "68kg", bloodType: "AB+", allergies: "Yodo", doctor: "Dr. Nefro", diet: "Renal" },
-                tasks: {
-                    dia: [
-                        { id: 'p7_d1', text: "07:00 - PESO MATUTINO y Signos Vitales", type: "vital" },
-                        { id: 'p7_d2', text: "08:00 - Medicamentos quelantes con Desayuno", type: "med" },
-                        { id: 'p7_d3', text: "09:30 - PREPARACIÓN DIÁLISIS (Asepsia)", type: "cure" },
-                        { id: 'p7_d4', text: "10:00 - CONEXIÓN DIÁLISIS (Bolsa 1)", type: "cure" },
-                        { id: 'p7_d5', text: "12:00 - Drenaje y control de líquido (Balance)", type: "check" },
-                        { id: 'p7_d6', text: "14:00 - Comida estricta (Baja sal/potasio)", type: "food" },
-                        { id: 'p7_d7', text: "16:00 - CONEXIÓN DIÁLISIS (Bolsa 2)", type: "cure" },
-                        { id: 'p7_d8', text: "18:00 - Drenaje y Balance hídrico", type: "check" }
-                    ],
-                    noche: [
-                        { id: 'p7_n1', text: "20:00 - Cena y Medicamentos PA", type: "med" },
-                        { id: 'p7_n2', text: "22:00 - CONEXIÓN NOCTURNA (Máquina o Manual)", type: "cure" },
-                        { id: 'p7_n3', text: "23:00 - Verificar catéter y flujo", type: "check" },
-                        { id: 'p7_n4', text: "02:00 - Monitoreo alarmas máquina / Drenaje", type: "check" },
-                        { id: 'p7_n5', text: "06:00 - DESCONEXIÓN y Cierre Balance 24h", type: "cure" }
-                    ]
-                }
-            },
-            {
-                id: 'p8',
-                name: "Sra. Rosa",
-                condition: "Insuficiencia Cardíaca",
-                info: { address: "Av. Las Flores #100", emergency: "Vecina: Lupe (445-888-9999)", age: "79", weight: "58kg", bloodType: "O+", allergies: "Látex", doctor: "Dr. Cardio", diet: "Sin sal" },
-                tasks: {
-                    dia: [
-                        { id: 'p8_d1', text: "08:00 - Peso diario y Furosemida", type: "med" },
-                        { id: 'p8_d2', text: "09:00 - Desayuno sin sal y líquidos medidos", type: "food" },
-                        { id: 'p8_d3', text: "11:00 - Revisión edema (hinchazón) pies", type: "check" },
-                        { id: 'p8_d4', text: "13:00 - Descanso piernas elevadas", type: "physio" },
-                        { id: 'p8_d5', text: "14:30 - Comida y Meds corazón", type: "food" },
-                        { id: 'p8_d6', text: "17:00 - Toma Presión Arterial y FC", type: "vital" },
-                        { id: 'p8_d7', text: "18:00 - Caminata leve interior", type: "physio" }
-                    ],
-                    noche: [
-                        { id: 'p8_n1', text: "19:30 - Cena muy ligera (evitar reflujo)", type: "food" },
-                        { id: 'p8_n2', text: "21:00 - Acomodo almohadas (Posición Fowler)", type: "physio" },
-                        { id: 'p8_n3', text: "22:00 - Revisión dificultad respiratoria", type: "vital" },
-                        { id: 'p8_n4', text: "00:00 - Asistencia orinal (diurético)", type: "hygiene" },
-                        { id: 'p8_n5', text: "03:00 - Monitoreo respiración", type: "check" },
-                        { id: 'p8_n6', text: "06:00 - Signos vitales al despertar", type: "vital" }
-                    ]
-                }
-            },
-            {
-                id: 'p9',
-                name: "Don Antonio",
-                condition: "EPOC Severo / O2 Dependiente",
-                info: { address: "Calle Hidalgo #33", emergency: "Hijo: Toño (445-222-3333)", age: "82", weight: "62kg", bloodType: "A+", allergies: "Polvo", doctor: "Dr. Neumo", diet: "Fraccionada" },
-                tasks: {
-                    dia: [
-                        { id: 'p9_d1', text: "08:00 - Inhaladores (Bomba) y Oximetría", type: "med" },
-                        { id: 'p9_d2', text: "09:00 - Desayuno (porciones pequeñas)", type: "food" },
-                        { id: 'p9_d3', text: "10:30 - Nebulización con palmadopercusión", type: "med" },
-                        { id: 'p9_d4', text: "12:00 - Baño rápido (evitar fatiga)", type: "hygiene" },
-                        { id: 'p9_d5', text: "14:00 - Comida y Chequeo tanque O2", type: "food" },
-                        { id: 'p9_d6', text: "16:00 - Ejercicios respiratorios suaves", type: "physio" },
-                        { id: 'p9_d7', text: "18:00 - Merienda y Oximetría en reposo", type: "vital" }
-                    ],
-                    noche: [
-                        { id: 'p9_n1', text: "20:00 - Rellenar humidificador O2", type: "check" },
-                        { id: 'p9_n2', text: "21:00 - Nebulización nocturna y Meds", type: "med" },
-                        { id: 'p9_n3', text: "23:00 - Revisar bigotera nasal y orejas", type: "cure" },
-                        { id: 'p9_n4', text: "02:00 - Oximetría sin despertar", type: "vital" },
-                        { id: 'p9_n5', text: "04:00 - Chequeo flujo Oxígeno", type: "check" },
-                        { id: 'p9_n6', text: "07:00 - Oximetría matutina y limpieza nasal", type: "vital" }
-                    ]
-                }
-            },
-            {
-                id: 'p10',
-                name: "Sra. Teresa",
-                condition: "Demencia Senil / Riesgo Caídas",
-                info: { address: "Privada del Sol #5", emergency: "Hija: Maria (445-444-5555)", age: "88", weight: "48kg", bloodType: "O-", allergies: "Ninguna", doctor: "Dr. Geria", diet: "Alta calórica" },
-                tasks: {
-                    dia: [
-                        { id: 'p10_d1', text: "08:30 - Despertar y cambio de pañal", type: "hygiene" },
-                        { id: 'p10_d2', text: "09:30 - Desayuno completo asistido", type: "food" },
-                        { id: 'p10_d3', text: "11:00 - Caminata vigilada (cinturón seguridad)", type: "physio" },
-                        { id: 'p10_d4', text: "12:30 - Hidratación (Jalea/Agua)", type: "food" },
-                        { id: 'p10_d5', text: "14:30 - Comida y Medicamentos", type: "food" },
-                        { id: 'p10_d6', text: "16:30 - Aseo y cambio de ropa", type: "hygiene" },
-                        { id: 'p10_d7', text: "18:00 - Juego de cartas/memoria", type: "physio" }
-                    ],
-                    noche: [
-                        { id: 'p10_n1', text: "19:30 - Cena (cereal/leche)", type: "food" },
-                        { id: 'p10_n2', text: "20:30 - Llevar al baño y Pijama", type: "hygiene" },
-                        { id: 'p10_n3', text: "21:30 - SUBIR BARANDALES CAMA", type: "check" },
-                        { id: 'p10_n4', text: "00:00 - Revisión pañal (cambio si requiere)", type: "hygiene" },
-                        { id: 'p10_n5', text: "03:00 - Ronda de seguridad (no despertar)", type: "check" },
-                        { id: 'p10_n6', text: "06:00 - Cambio pañal matutino", type: "hygiene" }
-                    ]
-                }
-            },
-            {
-                id: 'p11',
-                name: "Don Miguel",
-                condition: "Ceguera / Diabetes",
-                info: { address: "Calle 5 de Mayo", emergency: "Esposa: Laura (445-666-7777)", age: "70", weight: "85kg", bloodType: "B+", allergies: "Mariscos", doctor: "Dr. Oftalmo", diet: "Diabética" },
-                tasks: {
-                    dia: [
-                        { id: 'p11_d1', text: "07:30 - Glucosa y Guía al baño", type: "vital" },
-                        { id: 'p11_d2', text: "08:00 - Insulina Rápida y Desayuno (describir plato)", type: "food" },
-                        { id: 'p11_d3', text: "10:00 - Rasurado y Ducha asistida", type: "hygiene" },
-                        { id: 'p11_d4', text: "12:00 - Colación y Medicación oral", type: "med" },
-                        { id: 'p11_d5', text: "14:00 - Comida (cuidar temperatura)", type: "food" },
-                        { id: 'p11_d6', text: "16:00 - Radio/Audiolibro y Convivencia", type: "physio" },
-                        { id: 'p11_d7', text: "18:00 - Caminata segura en patio", type: "physio" }
-                    ],
-                    noche: [
-                        { id: 'p11_n1', text: "20:00 - Glucosa y Cena", type: "vital" },
-                        { id: 'p11_n2', text: "21:00 - Aseo bucal y Pijama", type: "hygiene" },
-                        { id: 'p11_n3', text: "22:00 - Verificar entorno seguro (sin obstáculos)", type: "check" },
-                        { id: 'p11_n4', text: "00:00 - Monitoreo sueño", type: "check" },
-                        { id: 'p11_n5', text: "03:00 - Asistencia al baño (Llamado)", type: "hygiene" },
-                        { id: 'p11_n6', text: "06:00 - Preparar ropa día siguiente", type: "check" }
-                    ]
-                }
-            },
-            {
-                id: 'p12',
-                name: "Sra. Lupita",
-                condition: "Postración Total / Úlceras (Escaras)",
-                info: { address: "Calle Obregón", emergency: "Hijo: Beto (445-000-1111)", age: "90", weight: "45kg", bloodType: "A-", allergies: "Adhesivo", doctor: "Dr. Heridas", diet: "Sonda NG" },
-                tasks: {
-                    dia: [
-                        { id: 'p12_d1', text: "07:00 - Cambio pañal y Sábanas limpias", type: "hygiene" },
-                        { id: 'p12_d2', text: "08:00 - ALIMENTACIÓN SONDA (Bolus 1) + Meds", type: "food" },
-                        { id: 'p12_d3', text: "09:00 - CURACIÓN ÚLCERAS (Sacro/Talones)", type: "cure" },
-                        { id: 'p12_d4', text: "11:00 - MOVILIZACIÓN (Reloj 11h) y Lubricar", type: "physio" },
-                        { id: 'p12_d5', text: "13:00 - ALIMENTACIÓN SONDA (Bolus 2) + Agua", type: "food" },
-                        { id: 'p12_d6', text: "15:00 - MOVILIZACIÓN (Reloj 15h) y Pañal", type: "physio" },
-                        { id: 'p12_d7', text: "17:00 - Baño de esponja en cama", type: "hygiene" },
-                        { id: 'p12_d8', text: "18:00 - ALIMENTACIÓN SONDA (Bolus 3)", type: "food" }
-                    ],
-                    noche: [
-                        { id: 'p12_n1', text: "20:00 - Limpieza Sonda y Enjuague bucal", type: "hygiene" },
-                        { id: 'p12_n2', text: "21:00 - MOVILIZACIÓN (Decúbito Lat Der)", type: "physio" },
-                        { id: 'p12_n3', text: "23:00 - Cambio de Pañal estricto", type: "hygiene" },
-                        { id: 'p12_n4', text: "00:00 - MOVILIZACIÓN (Decúbito Lat Izq)", type: "physio" },
-                        { id: 'p12_n5', text: "03:00 - MOVILIZACIÓN (Supino) y Pañal", type: "physio" },
-                        { id: 'p12_n6', text: "06:00 - Aspiración de secreciones (si requiere)", type: "cure" }
-                    ]
-                }
+            Back: function Back() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-6 h-6",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("path", {
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    strokeWidth: "2",
+                    d: "M15 19l-7-7 7-7"
+                }));
             }
-        ];
+        };
 
-        // ---------------------------------------------------------
-        // 3. ICONOS
-        // ---------------------------------------------------------
-        const Icons = {
-            Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
-            MapPin: () => <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
-            Phone: () => <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>,
-            File: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-            LogOut: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
-            Whatsapp: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        var getTodayStr = function getTodayStr() {
+            return new Date().toISOString().split('T')[0];
+        };
+
+        var getCalendarRange = function getCalendarRange() {
+            var dates = [];
+            var today = new Date();
+            for (var i = -15; i <= 15; i++) {
+                var d = new Date(today);
+                d.setDate(today.getDate() + i);
+                dates.push(d.toISOString().split('T')[0]);
+            }
+            return dates;
+        };
+
+        var isEditable = function isEditable(dateStr, shift) {
+            var now = new Date();
+            var recordDate = new Date(dateStr + "T12:00:00");
+            var today = new Date(getTodayStr() + "T12:00:00");
+
+            if (recordDate > today) return false;
+
+            if (recordDate < today) {
+                var yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                var isYesterday = recordDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
+                if (isYesterday && shift === 'noche' && now.getHours() < 9) return true;
+                return false;
+            }
+
+            var currentHour = now.getHours();
+            if (shift === 'dia') return currentHour < 21;
+            if (shift === 'noche') return true;
+            return false;
         };
 
         // ---------------------------------------------------------
         // 4. COMPONENTES
         // ---------------------------------------------------------
 
-        function LoginScreen({ onLogin }) {
-            const [selectedUser, setSelectedUser] = React.useState("");
-            const [pin, setPin] = React.useState("");
-            const [error, setError] = React.useState("");
+        function LoginScreen(_ref) {
+            var onLogin = _ref.onLogin;
 
-            const logoUrl = "https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg";
+            var _React$useState = React.useState(""),
+                selectedUser = _React$useState[0],
+                setSelectedUser = _React$useState[1];
 
-            const handleAttempt = (e) => {
+            var _React$useState2 = React.useState(""),
+                pin = _React$useState2[0],
+                setPin = _React$useState2[1];
+
+            var _React$useState3 = React.useState(""),
+                error = _React$useState3[0],
+                setError = _React$useState3[1];
+
+            var handleAttempt = function handleAttempt(e) {
                 e.preventDefault();
-                const user = CAREGIVERS.find(c => c.name === selectedUser);
-                if (user && user.pin === pin) {
-                    onLogin(user);
-                } else {
+                var user = STAFF.find(function(c) {
+                    return c.name === selectedUser;
+                });
+                if (user && user.pin === pin) onLogin(user);
+                else {
                     setError("PIN Incorrecto");
                     setPin("");
                 }
             };
 
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-slate-900 to-slate-800">
-                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center fade-in border border-slate-700">
-                        
-                        <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-muvnBlue">
-                            <img src={logoUrl} alt="MUVN Logo" className="w-full h-full object-contain" />
-                        </div>
-                        
-                        <h2 className="text-2xl font-bold text-white mb-1">Bienvenido a MUVN</h2>
-                        <p className="text-sm text-slate-400 mb-6">Plataforma de Cuidados a Domicilio</p>
-
-                        <form onSubmit={handleAttempt} className="space-y-5">
-                            <div className="text-left">
-                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Seleccionar Personal</label>
-                                <select 
-                                    className="dark-input"
-                                    value={selectedUser}
-                                    onChange={(e) => {setSelectedUser(e.target.value); setError("");}}
-                                >
-                                    <option value="" className="text-gray-500">-- Elige tu nombre --</option>
-                                    {CAREGIVERS.map(c => (
-                                        <option key={c.pin} value={c.name} className="text-gray-900 font-medium">
-                                            {c.name} {c.isSupervisor ? '(Supervisor)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {selectedUser && (
-                                <div className="text-left animate-fade-in">
-                                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ingrese PIN (4 dígitos)</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                            <Icons.Lock />
-                                        </div>
-                                        <input 
-                                            type="password" 
-                                            maxLength="4"
-                                            className="dark-input pl-10 text-center tracking-widest text-lg"
-                                            value={pin}
-                                            onChange={(e) => setPin(e.target.value)}
-                                            placeholder="••••"
-                                        />
-                                    </div>
-                                    {error && <p className="text-red-400 text-xs mt-2 text-center font-bold">{error}</p>}
-                                </div>
-                            )}
-
-                            <button 
-                                disabled={!selectedUser || pin.length < 4}
-                                className="w-full bg-[#0DA4BF] hover:bg-[#098a9f] text-white font-bold py-3 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
-                            >
-                                Ingresar al Turno
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            );
-        }
-
-        function TechnicalSheet({ patient }) {
-            const { info } = patient;
-            return (
-                <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 overflow-hidden mb-6">
-                    <div className="bg-[#0DA4BF] text-white px-4 py-3 flex items-center gap-2">
-                        <Icons.File />
-                        <h3 className="font-bold">Ficha Técnica del Paciente</h3>
-                    </div>
-                    <div className="p-5 space-y-4 text-sm">
-                        
-                        <div className="grid grid-cols-1 gap-2 pb-3 border-b border-slate-700">
-                            <div>
-                                <span className="block text-slate-400 text-xs uppercase">Paciente</span>
-                                <span className="font-bold text-white text-xl">{patient.name}</span>
-                            </div>
-                             <div>
-                                <span className="block text-slate-400 text-xs uppercase mt-2">Diagnóstico Principal</span>
-                                <span className="font-semibold text-[#0DA4BF] text-md">{patient.condition}</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3 border-b border-slate-700 bg-slate-800/50 p-3 rounded-lg">
-                             <div className="col-span-2 md:col-span-1">
-                                <span className="block text-slate-400 text-xs mb-1"><Icons.MapPin /> Dirección del Domicilio</span>
-                                <span className="font-medium text-white break-words">{info.address}</span>
-                            </div>
-                            <div className="col-span-2 md:col-span-1 bg-red-900/20 p-2 rounded border border-red-900/50">
-                                <span className="block text-red-300 text-xs font-bold mb-1"><Icons.Phone /> Contacto de Emergencia</span>
-                                <span className="font-bold text-red-100 text-base">{info.emergency}</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 pt-2">
-                             <div>
-                                <span className="block text-slate-400 text-xs">Edad / Peso</span>
-                                <span className="font-medium text-slate-200">{info.age} - {info.weight}</span>
-                            </div>
-                            <div>
-                                <span className="block text-slate-400 text-xs">Tipo Sangre</span>
-                                <span className="font-medium text-slate-200">{info.bloodType}</span>
-                            </div>
-                            <div>
-                                <span className="block text-slate-400 text-xs text-red-300">Alergias</span>
-                                <span className="font-medium text-red-200">{info.allergies}</span>
-                            </div>
-                             <div>
-                                <span className="block text-slate-400 text-xs">Médico Tratante</span>
-                                <span className="font-medium text-slate-200">{info.doctor}</span>
-                            </div>
-                             <div className="col-span-2 bg-slate-700 p-3 rounded border border-slate-600">
-                                <span className="block text-yellow-400 text-xs font-bold mb-1">Dieta Indicada</span>
-                                <span className="text-slate-200">{info.diet}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function SupervisorPatientList({ assignments, onSelectPatient, shift }) {
-            return (
-                 <div className="p-4 fade-in max-w-xl mx-auto mt-6">
-                    <h2 className="text-2xl font-bold mb-6 text-white text-center">Lista de Pacientes Asignados</h2>
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
-                        Turno {shift === 'dia' ? '☀️ Día (07:00 - 19:00)' : '🌙 Noche (19:00 - 07:00)'}
-                    </h3>
-                    
-                    <div className="space-y-4">
-                        {PATIENTS.map(p => {
-                            const assignment = assignments[p.id] || { caregiver: 'Pendiente de Asignar', lastUpdate: null };
-                            return (
-                                <button 
-                                    key={p.id} 
-                                    onClick={() => onSelectPatient(p.id)}
-                                    className="w-full text-left p-5 bg-slate-800 rounded-xl shadow-lg border border-slate-700 hover:border-[#0DA4BF] transition flex flex-col md:flex-row justify-between items-start md:items-center group"
-                                >
-                                    <div className="flex-1">
-                                        <div className="font-bold text-lg text-white group-hover:text-[#0DA4BF] transition">{p.name}</div>
-                                        <div className="text-xs text-slate-400 mt-1 mb-2">{p.condition}</div>
-                                        <div className="text-sm text-slate-300 font-semibold mt-2">
-                                            Asignado a: <span className="text-[#0DA4BF] font-bold">{assignment.caregiver}</span>
-                                        </div>
-                                        <div className="text-xs text-slate-500 mt-1">
-                                            Último registro: {assignment.lastUpdate || 'N/A'}
-                                        </div>
-                                    </div>
-                                    <div className="text-slate-600 mt-3 md:mt-0 group-hover:text-[#0DA4BF] text-2xl">➜</div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        }
-
-        function Dashboard({ user, onLogout }) {
-            const [selectedPatientId, setSelectedPatientId] = React.useState(null);
-            
-            // INICIALIZACIÓN DEL TURNO BASADA EN CONFIGURACIÓN HTML
-            // Si tiene turno asignado, inicia con él. Si no, por defecto día.
-            const [shift, setShift] = React.useState(user.assignedShift || "dia");
-            
-            const [records, setRecords] = React.useState({});
-            const [generalObservation, setGeneralObservation] = React.useState("");
-            const [status, setStatus] = React.useState("idle"); 
-            const [assignments, setAssignments] = React.useState({}); 
-
-            const isSupervisor = user.isSupervisor;
-            const defaultPatient = user.assignedPatientId ? user.assignedPatientId : PATIENTS[0].id;
-
-            // Determinar qué botones se pueden presionar
-            // Supervisor puede todo. Usuario normal solo su turno asignado.
-            const canSelectDay = isSupervisor || user.assignedShift === 'dia' || !user.assignedShift;
-            const canSelectNight = isSupervisor || user.assignedShift === 'noche' || !user.assignedShift;
-
-            const getTodayStr = () => new Date().toISOString().split('T')[0];
-            const formatDate = (date) => date ? new Date(date.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A';
-
-            React.useEffect(() => {
-                if (!isSupervisor && !selectedPatientId) {
-                    setSelectedPatientId(defaultPatient);
-                }
-            }, [isSupervisor, defaultPatient]);
-
-            React.useEffect(() => {
-                if(!selectedPatientId || isSupervisor) return;
-
-                const loadData = async () => {
-                    setStatus("loading");
-                    const dateStr = getTodayStr();
-                    const docId = `${dateStr}_${shift}_${selectedPatientId}`;
-                    try {
-                        const docRef = db.collection("registros_diarios").doc(docId);
-                        const docSnap = await docRef.get();
-                        if (docSnap.exists) {
-                            const data = docSnap.data();
-                            setRecords(data.records || {});
-                            setGeneralObservation(data.generalObservation || "");
-                        } else {
-                            setRecords({}); setGeneralObservation("");
-                        }
-                    } catch (e) { console.error(e); } finally { setStatus("idle"); }
-                };
-                loadData();
-            }, [selectedPatientId, shift, isSupervisor]);
-
-            React.useEffect(() => {
-                if (!isSupervisor) return;
-
-                const fetchAssignments = async () => {
-                    setStatus("loading_list");
-                    const dateStr = getTodayStr();
-                    try {
-                        const snapshot = await db.collection("registros_diarios")
-                            .where('date', '==', dateStr)
-                            .get();
-                        
-                        const latestAssignments = {};
-
-                        snapshot.docs.forEach(doc => {
-                            const data = doc.data();
-                            const { patientId, caregiver, lastUpdate } = data;
-                            const updateTime = lastUpdate.toDate ? lastUpdate.toDate() : new Date(lastUpdate.seconds * 1000);
-
-                            const key = patientId; 
-                            if (!latestAssignments[key] || updateTime > latestAssignments[key].timestamp) {
-                                latestAssignments[key] = {
-                                    caregiver: caregiver,
-                                    lastUpdate: updateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-                                    timestamp: updateTime
-                                };
-                            }
-                        });
-
-                        const patientAssignments = {};
-                        PATIENTS.forEach(p => {
-                             patientAssignments[p.id] = latestAssignments[p.id] || { caregiver: 'Pendiente de Registro', lastUpdate: null };
-                        });
-                        
-                        setAssignments(patientAssignments);
-                        setStatus("idle");
-                    } catch (e) {
-                        console.error("Error al cargar asignaciones:", e);
-                        setStatus("error");
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "flex flex-col items-center justify-center min-h-screen px-4 bg-slate-900"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto fade-in"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-[#0AB2BB]"
+                }, /*#__PURE__*/
+                React.createElement("img", {
+                    src: "https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg",
+                    alt: "Logo",
+                    className: "w-full h-full object-contain"
+                })), /*#__PURE__*/
+                React.createElement("h2", {
+                    className: "text-2xl font-bold text-white mb-1"
+                }, "MUVN 2.0"), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-sm text-slate-400 mb-8"
+                }, "Administraci\xF3n y Cuidados"), /*#__PURE__*/
+                React.createElement("form", {
+                    onSubmit: handleAttempt,
+                    className: "space-y-6"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-left"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-300 uppercase mb-2 ml-1"
+                }, "Usuario"), /*#__PURE__*/
+                React.createElement("select", {
+                    className: "custom-input text-sm",
+                    value: selectedUser,
+                    onChange: function onChange(e) {
+                        setSelectedUser(e.target.value);
+                        setError("");
                     }
+                }, /*#__PURE__*/
+                React.createElement("option", {
+                    value: ""
+                }, "-- Seleccionar --"), STAFF.map(function(c) {
+                    return /*#__PURE__*/React.createElement("option", {
+                        key: c.pin,
+                        value: c.name
+                    }, c.name, " ", c.role === 'admin' ? '(Admin)' : '');
+                }))), selectedUser && /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-left fade-in"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-300 uppercase mb-2 ml-1"
+                }, "PIN"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "relative"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "absolute left-3 top-3 text-gray-400"
+                }, /*#__PURE__*/
+                React.createElement(Icons.Lock, null)), /*#__PURE__*/
+                React.createElement("input", {
+                    type: "password",
+                    maxLength: "4",
+                    className: "custom-input pl-10 text-center text-xl font-bold tracking-widest",
+                    value: pin,
+                    onChange: function onChange(e) {
+                        return setPin(e.target.value);
+                    },
+                    placeholder: "\u2022\u2022\u2022\u2022"
+                })), error && /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-red-400 text-xs mt-2 text-center font-bold"
+                }, error)), /*#__PURE__*/
+                React.createElement("button", {
+                    disabled: !selectedUser || pin.length < 4,
+                    className: "w-full bg-[#0AB2BB] hover:bg-[#089aa1] text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all mt-4"
+                }, "Ingresar")))));
+        }
+
+        function AdminPanel(_ref2) {
+            var user = _ref2.user,
+                onLogout = _ref2.onLogout;
+
+            var _React$useState4 = React.useState(getTodayStr()),
+                selectedDate = _React$useState4[0],
+                setSelectedDate = _React$useState4[1];
+
+            var _React$useState5 = React.useState({}),
+                assignments = _React$useState5[0],
+                setAssignments = _React$useState5[1];
+
+            var _React$useState6 = React.useState(false),
+                loading = _React$useState6[0],
+                setLoading = _React$useState6[1];
+
+            React.useEffect(function() {
+                setLoading(true);
+                var unsubscribe = db.collection("asignaciones").doc(selectedDate).onSnapshot(function(doc) {
+                    if (doc.exists) setAssignments(doc.data());
+                    else setAssignments({});
+                    setLoading(false);
+                });
+                return function() {
+                    return unsubscribe();
                 };
-                fetchAssignments();
-            }, [isSupervisor, shift]);
+            }, [selectedDate]);
 
-
-            const saveData = async (newRecords, newObs) => {
-                if(!selectedPatientId || isSupervisor) return;
-
-                setStatus("saving");
-                const dateStr = getTodayStr();
-                const docId = `${dateStr}_${shift}_${selectedPatientId}`;
-                try {
-                    await db.collection("registros_diarios").doc(docId).set({
-                        date: dateStr, shift: shift, patientId: selectedPatientId,
-                        caregiver: user.name, 
-                        lastUpdate: firebase.firestore.Timestamp.now(), records: newRecords, generalObservation: newObs
-                    }, { merge: true });
-                    setStatus("saved"); setTimeout(() => setStatus("idle"), 2000);
-                } catch (e) { setStatus("error"); }
-            };
-
-            const toggleTask = (taskId) => {
-                if(isSupervisor) return;
-                const now = new Date();
-                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                const current = records[taskId] || {};
-                const updatedRec = current.checked 
-                    ? { ...current, checked: false, completedAt: null }
-                    : { ...current, checked: true, completedAt: timeString };
-                const newRecords = { ...records, [taskId]: updatedRec };
-                setRecords(newRecords);
-                saveData(newRecords, generalObservation);
-            };
-
-            const handleNote = (taskId, note) => {
-                 if(isSupervisor) return;
-                const newRecords = { ...records, [taskId]: { ...(records[taskId] || {}), note: note } };
-                setRecords(newRecords);
-            };
-
-            const handleSendWhatsapp = () => {
-                 if(isSupervisor) return;
-                const p = PATIENTS.find(pt => pt.id === selectedPatientId);
-                const tasks = p.tasks[shift];
-                let msg = `🏥 *REPORTE MUVN - CUIDADOS EN CASA*\n`;
-                msg += `👤 ${user.name}\n📅 ${getTodayStr()} | Turno: ${shift.toUpperCase()}\n`;
-                msg += `👴 Paciente: ${p.name}\n📍 Dirección: ${p.info.address}\n\n`;
-                msg += `*ACTIVIDADES REALIZADAS:*\n`;
-                tasks.forEach(t => {
-                    const rec = records[t.id];
-                    if(rec && rec.checked) {
-                        msg += `✅ ${t.text} @ ${rec.completedAt}\n`;
-                        if(rec.note) msg += `   📝 Nota: ${rec.note}\n`;
-                    } else {
-                        msg += `⭕ ${t.text} (Pendiente)\n`;
+            var handleAssign = function handleAssign(caregiverName, patientId, shift) {
+                var newAssignments = Object.assign(Object.assign({}, assignments), {}, {
+                    [caregiverName]: {
+                        patientId: patientId,
+                        shift: shift
                     }
                 });
-                if(generalObservation) msg += `\n*OBSERVACIONES GENERALES:*\n${generalObservation}\n`;
-                window.open(`https://wa.me/524451586270?text=${encodeURIComponent(msg)}`, '_blank');
+                if (patientId === "off") delete newAssignments[caregiverName];
+                db.collection("asignaciones").doc(selectedDate).set(newAssignments);
             };
 
-            const currentPatient = PATIENTS.find(p => p.id === selectedPatientId);
+            return (
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-20 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("header", {
+                    className: "bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10"
+                }, /*#__PURE__*/
+                React.createElement("h1", {
+                    className: "text-white font-bold text-lg"
+                }, /*#__PURE__*/
+                React.createElement("span", {
+                    className: "text-[#0AB2BB]"
+                }, "MUVN"), " Admin"), /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onLogout,
+                    className: "text-slate-400 hover:text-white text-sm"
+                }, "Salir")), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4 max-w-4xl mx-auto"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 sticky top-20 z-10 shadow-lg"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-400 uppercase mb-2"
+                }, "Fecha a Gestionar"), /*#__PURE__*/
+                React.createElement("input", {
+                    type: "date",
+                    value: selectedDate,
+                    onChange: function onChange(e) {
+                        return setSelectedDate(e.target.value);
+                    },
+                    className: "custom-input bg-white text-center font-bold text-lg"
+                }), loading && /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-center text-[#0AB2BB] text-xs mt-2"
+                }, "Cargando datos...")), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "grid grid-cols-1 md:grid-cols-2 gap-4"
+                }, STAFF.filter(function(u) {
+                    return u.role === 'caregiver';
+                }).map(function(caregiver) {
+                    var assignment = assignments[caregiver.name] || {
+                        patientId: "",
+                        shift: ""
+                    };
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: caregiver.pin,
+                            className: "bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3"
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex items-center gap-2 border-b border-slate-700 pb-2"
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white uppercase text-xs"
+                        }, caregiver.name.slice(0, 2)), /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "font-bold text-white text-sm"
+                        }, caregiver.name)), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "grid grid-cols-2 gap-2"
+                        }, /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("label", {
+                            className: "text-[10px] text-slate-400 uppercase"
+                        }, "Paciente"), /*#__PURE__*/
+                        React.createElement("select", {
+                            className: "w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]",
+                            value: assignment.patientId || "",
+                            onChange: function onChange(e) {
+                                return handleAssign(caregiver.name, e.target.value, assignment.shift || 'dia');
+                            }
+                        }, /*#__PURE__*/
+                        React.createElement("option", {
+                            value: ""
+                        }, "-- Sin Asignar --"), /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "off"
+                        }, "\uD83D\uDCA4 DESCANSO"), PATIENTS.map(function(p) {
+                            return /*#__PURE__*/React.createElement("option", {
+                                key: p.id,
+                                value: p.id
+                            }, p.name);
+                        })), /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("label", {
+                            className: "text-[10px] text-slate-400 uppercase"
+                        }, "Turno"), /*#__PURE__*/
+                        React.createElement("select", {
+                            className: "w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]",
+                            value: assignment.shift || "",
+                            onChange: function onChange(e) {
+                                return handleAssign(caregiver.name, assignment.patientId, e.target.value);
+                            },
+                            disabled: !assignment.patientId || assignment.patientId === 'off'
+                        }, /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "dia"
+                        }, "\u2600\uFE0F D\xEDa"), /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "noche"
+                        }, "\uD83C\uDF19 Noche"))))));
+                })))));
+        }
+
+        function CaregiverCalendar(_ref3) {
+            var user = _ref3.user,
+                onLogout = _ref3.onLogout,
+                onSelectShift = _ref3.onSelectShift;
+
+            var _React$useState7 = React.useState(getCalendarRange()),
+                dates = _React$useState7[0];
+
+            var _React$useState8 = React.useState({}),
+                myAssignments = _React$useState8[0],
+                setMyAssignments = _React$useState8[1];
+
+            var _React$useState9 = React.useState(true),
+                loading = _React$useState9[0],
+                setLoading = _React$useState9[1];
+
+            React.useEffect(function() {
+                var unsubscribe = db.collection("asignaciones").onSnapshot(function(snapshot) {
+                    var data = {};
+                    snapshot.docs.forEach(function(doc) {
+                        var dayAssignments = doc.data();
+                        if (dayAssignments[user.name]) {
+                            data[doc.id] = dayAssignments[user.name];
+                        }
+                    });
+                    setMyAssignments(data);
+                    setLoading(false);
+                });
+                return function() {
+                    return unsubscribe();
+                };
+            }, []);
 
             return (
-                <div className="pb-24 bg-slate-900 min-h-screen">
-                    <header className="bg-slate-800 sticky top-0 z-20 shadow-md border-b border-slate-700 px-4 py-3 flex justify-between items-center">
-                        <div>
-                            <h1 className="font-bold text-white flex items-center gap-2">
-                                <span className="text-[#0DA4BF]">MUVN</span> {isSupervisor ? 'Supervisor' : 'App'}
-                            </h1>
-                             <p className="text-xs text-slate-400">{user.name}</p>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                             {status === 'saving' && <span className="text-xs text-yellow-400 animate-pulse">Guardando...</span>}
-                             {status === 'saved' && <span className="text-xs text-green-400">✓ Guardado</span>}
-                            <button onClick={onLogout} className="p-2 bg-slate-700 rounded-full text-slate-300 hover:bg-slate-600 hover:text-white transition"><Icons.LogOut /></button>
-                        </div>
-                    </header>
-                    
-                    {(isSupervisor || !selectedPatientId) && (
-                        <div className="p-4 fade-in max-w-xl mx-auto mt-6">
-                            <label className="block text-sm font-semibold mb-3 text-slate-400">
-                                {isSupervisor ? 'Selecciona Horario a Supervisar' : 'Tu Horario Asignado'}
-                            </label>
-                            
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                <button 
-                                    onClick={() => canSelectDay && setShift('dia')} 
-                                    disabled={!canSelectDay}
-                                    className={`p-4 rounded-xl border-2 font-bold transition flex flex-col items-center justify-center gap-2
-                                        ${shift === 'dia' 
-                                            ? 'border-[#0DA4BF] bg-[#0DA4BF]/20 text-white shadow-[0_0_15px_rgba(13,164,191,0.5)]' 
-                                            : canSelectDay ? 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500' : 'border-slate-800 bg-slate-900 text-slate-700 opacity-40 cursor-not-allowed'
-                                        }`}
-                                >
-                                    <span className="text-2xl">☀️</span>
-                                    <span>Día (12h)</span>
-                                </button>
-                                
-                                <button 
-                                    onClick={() => canSelectNight && setShift('noche')} 
-                                    disabled={!canSelectNight}
-                                    className={`p-4 rounded-xl border-2 font-bold transition flex flex-col items-center justify-center gap-2
-                                        ${shift === 'noche' 
-                                            ? 'border-indigo-400 bg-indigo-500/20 text-white shadow-[0_0_15px_rgba(129,140,248,0.5)]' 
-                                            : canSelectNight ? 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500' : 'border-slate-800 bg-slate-900 text-slate-700 opacity-40 cursor-not-allowed'
-                                        }`}
-                                >
-                                    <span className="text-2xl">🌙</span>
-                                    <span>Noche (12h)</span>
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-10 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("header", {
+                    className: "bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-md"
+                }, /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h1", {
+                    className: "text-white font-bold"
+                }, "Hola, ", user.name.split(' ')[0]), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-xs text-slate-400"
+                }, "Tu Calendario de Turnos")), /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onLogout,
+                    className: "p-2 bg-slate-700 rounded-full text-white"
+                }, /*#__PURE__*/
+                React.createElement(Icons.User, null))), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4"
+                }, loading ? /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-center text-[#0AB2BB] mt-10"
+                }, "Cargando agenda...") : /*#__PURE__*/
+                React.createElement("div", {
+                    className: "space-y-3"
+                }, dates.map(function(date) {
+                    var assignment = myAssignments[date];
+                    var isToday = date === getTodayStr();
+                    var patient = assignment ? PATIENTS.find(function(p) {
+                        return p.id === assignment.patientId;
+                    }) : null;
 
-                    {isSupervisor && !selectedPatientId && (
-                        status === 'loading_list' ? (
-                            <div className="text-center p-8 text-lg text-[#0DA4BF]">Cargando asignaciones...</div>
-                        ) : (
-                            <SupervisorPatientList 
-                                assignments={assignments} 
-                                onSelectPatient={setSelectedPatientId}
-                                shift={shift}
-                            />
-                        )
-                    )}
+                    var cardClass = "bg-slate-800 border-slate-700 opacity-50";
+                    if (assignment) {
+                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02] border-2";
+                        else cardClass = "bg-slate-800 border-slate-600 text-slate-300 hover:border-[#0AB2BB]";
+                    }
 
-                    {selectedPatientId && currentPatient && (
-                        <div className="p-4 max-w-2xl mx-auto fade-in">
-                            {(isSupervisor || (selectedPatientId !== defaultPatient)) && (
-                                <button onClick={() => setSelectedPatientId(null)} className="text-sm text-[#0DA4BF] hover:text-white mb-4 flex items-center gap-1 transition">
-                                    ← Volver a la lista
-                                </button>
-                            )}
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: date,
+                            onClick: function onClick() {
+                                return assignment && onSelectShift(date, assignment);
+                            },
+                            className: "p-4 rounded-xl border flex items-center justify-between transition-all " + cardClass + " " + (!assignment ? 'cursor-default' : 'cursor-pointer')
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex flex-col items-center justify-center w-12 border-r border-white/10 pr-4 mr-4"
+                        }, /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-xs uppercase font-bold opacity-70"
+                        }, new Date(date).toLocaleDateString('es-ES', {
+                            weekday: 'short'
+                        })), /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-xl font-bold"
+                        }, date.split('-')[2])), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex-1"
+                        }, assignment ? /*#__PURE__*/
+                        React.createElement(React.Fragment, null, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "font-bold text-lg"
+                        }, patient ? patient.name : 'Paciente desconocido'), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-sm opacity-90 flex items-center gap-2"
+                        }, /*#__PURE__*/
+                        React.createElement("span", null, assignment.shift === 'dia' ? '☀️ Turno Día' : '🌙 Turno Noche'))) : /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-sm italic opacity-50"
+                        }, "Sin asignaci\xF3n / Descanso")), assignment && /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-2xl opacity-50"
+                        }, "\u279C"))
+                    );
+                })))));
+        }
 
-                            <TechnicalSheet patient={currentPatient} />
-                            
-                            {isSupervisor && assignments[selectedPatientId] && (
-                                <div className="bg-slate-700 p-4 rounded-xl border border-slate-600 mb-6">
-                                    <span className="block text-xs font-bold uppercase text-slate-400">Cuidador Registrando el Turno Actual:</span>
-                                    <span className="font-bold text-lg text-white">{assignments[selectedPatientId].caregiver}</span>
-                                    <span className="text-xs text-slate-400 ml-2">(Último registro: {assignments[selectedPatientId].lastUpdate})</span>
-                                </div>
-                            )}
+        function DailyLog(_ref4) {
+            var user = _ref4.user,
+                date = _ref4.date,
+                assignment = _ref4.assignment,
+                onBack = _ref4.onBack;
 
-                            <div className="mb-8">
-                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
-                                    {shift === 'dia' ? '☀️ Actividades Turno Matutino' : '🌙 Actividades Turno Nocturno'}
-                                </h3>
-                                <div className="space-y-3">
-                                    {currentPatient.tasks[shift].map(task => {
-                                        const rec = records[task.id] || {};
-                                        return (
-                                            <div key={task.id} className={`p-4 rounded-lg border transition-all ${rec.checked ? 'bg-slate-800/50 border-[#0DA4BF]/50' : 'bg-slate-800 border-slate-700 shadow-sm'}`}>
-                                                <div className="flex items-start gap-4">
-                                                    <div className="pt-1">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={rec.checked || false} 
-                                                            onChange={() => toggleTask(task.id)}
-                                                            disabled={isSupervisor}
-                                                            className={`w-6 h-6 accent-[#0DA4BF] cursor-pointer rounded focus:ring-offset-slate-800 focus:ring-[#0DA4BF] ${isSupervisor ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <span className={`text-base font-medium ${rec.checked ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
-                                                            {task.text}
-                                                        </span>
-                                                        {rec.checked && <div className="text-xs text-[#0DA4BF] font-bold mt-1">Completado: {rec.completedAt}</div>}
-                                                        
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder={isSupervisor ? "Solo lectura" : "Notas breves..."} 
-                                                            className={`mt-3 w-full text-sm p-2 rounded text-slate-200 focus:outline-none focus:border-[#0DA4BF] transition ${isSupervisor ? 'bg-slate-900 border-slate-700/50 cursor-default' : 'bg-slate-900 border-slate-700'}`}
-                                                            value={rec.note || ""}
-                                                            onChange={(e) => handleNote(task.id, e.target.value)}
-                                                            onBlur={() => saveData(records, generalObservation)}
-                                                            disabled={isSupervisor}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+            var _React$useState10 = React.useState({}),
+                records = _React$useState10[0],
+                setRecords = _React$useState10[1];
 
-                            <div className="bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-700 mb-20">
-                                <h3 className="font-bold mb-3 text-sm uppercase text-slate-400">Bitácora del Turno / Eventualidades</h3>
-                                <textarea 
-                                    className={`w-full p-4 rounded-lg text-slate-200 text-sm focus:ring-2 focus:ring-[#0DA4BF] outline-none transition resize-none ${isSupervisor ? 'bg-slate-900 border-slate-700/50 cursor-default' : 'bg-slate-900 border-slate-700 focus:border-transparent'}`}
-                                    rows="5"
-                                    placeholder={isSupervisor ? "Solo lectura" : "Describe aquí cómo transcurrió el turno, estado de ánimo del paciente, incidentes, etc..."}
-                                    value={generalObservation}
-                                    onChange={(e) => setGeneralObservation(e.target.value)}
-                                    onBlur={() => saveData(records, generalObservation)}
-                                    disabled={isSupervisor}
-                                ></textarea>
-                            </div>
+            var _React$useState11 = React.useState(""),
+                obs = _React$useState11[0],
+                setObs = _React$useState11[1];
 
-                            {!isSupervisor && (
-                                <div className="fixed bottom-0 left-0 w-full p-4 bg-slate-900/80 backdrop-blur-md border-t border-slate-800">
-                                    <button 
-                                        onClick={handleSendWhatsapp}
-                                        className="w-full max-w-2xl mx-auto bg-[#0DA4BF] hover:bg-[#098a9f] text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-3 transition text-lg"
-                                    >
-                                        <Icons.Whatsapp /> Finalizar Turno y Enviar Reporte
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            );
+            var _React$useState12 = React.useState(false),
+                saving = _React$useState12[0],
+                setSaving = _React$useState12[1];
+
+            var patient = PATIENTS.find(function(p) {
+                return p.id === assignment.patientId;
+            });
+            var canEdit = isEditable(date, assignment.shift);
+            var docId = "".concat(date, "_").concat(assignment.shift, "_").concat(assignment.patientId);
+
+            React.useEffect(function() {
+                var unsubscribe = db.collection("registros_diarios").doc(docId).onSnapshot(function(doc) {
+                    if (doc.exists) {
+                        setRecords(doc.data().records || {});
+                        setObs(doc.data().generalObservation || "");
+                    }
+                });
+                return function() {
+                    return unsubscribe();
+                };
+            }, [docId]);
+
+            var handleToggle = function handleToggle(taskId) {
+                return function() {
+                    if (!canEdit) return;
+                    var now = new Date().toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    var current = records[taskId] || {};
+                    var newRec = Object.assign(Object.assign({}, records), {}, {
+                        [taskId]: Object.assign(Object.assign({}, current), {}, {
+                            checked: !current.checked,
+                            completedAt: !current.checked ? now : null
+                        })
+                    });
+                    setRecords(newRec); // Optimistic
+
+                    db.collection("registros_diarios").doc(docId).set({
+                        date: date,
+                        shift: assignment.shift,
+                        patientId: assignment.patientId,
+                        caregiver: user.name,
+                        lastUpdate: firebase.firestore.Timestamp.now(),
+                        records: newRec,
+                        generalObservation: obs
+                    }, {
+                        merge: true
+                    });
+                };
+            };
+
+            var saveObs = function saveObs() {
+                return function() {
+                    if (!canEdit) return;
+                    setSaving(true);
+                    db.collection("registros_diarios").doc(docId).set({
+                        generalObservation: obs
+                    }, {
+                        merge: true
+                    }).then(function() {
+                        return setSaving(false);
+                    });
+                };
+            };
+
+            if (!patient) return /*#__PURE__*/React.createElement("div", {
+                className: "p-10 text-white"
+            }, "Error: Paciente no encontrado");
+
+            return (
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-20 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "sticky top-0 z-20 p-4 flex justify-between items-center shadow-md " + (canEdit ? 'bg-[#0AB2BB]' : 'bg-slate-700')
+                }, /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onBack,
+                    className: "text-white font-bold text-xl flex items-center"
+                }, /*#__PURE__*/
+                React.createElement(Icons.Back, null), " Atr\xE1s"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-center text-white"
+                }, /*#__PURE__*/
+                React.createElement("h2", {
+                    className: "font-bold text-lg"
+                }, date), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-xs uppercase opacity-90"
+                }, assignment.shift, " - ", canEdit ? 'EDITANDO' : 'SOLO LECTURA')), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "w-8"
+                })), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4 max-w-2xl mx-auto space-y-6"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-4 rounded-xl border border-slate-700"
+                }, /*#__PURE__*/
+                React.createElement("h3", {
+                    className: "text-[#0AB2BB] font-bold text-lg"
+                }, patient.name), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-slate-400 text-sm mb-2"
+                }, patient.condition), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-900 p-2 rounded text-xs text-slate-300"
+                }, "\uD83D\uDCCD ", patient.info.address, " ", /*#__PURE__*/
+                React.createElement("br", null), "\uD83D\uDEA8 ", patient.info.emergency)), /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h4", {
+                    className: "text-white font-bold mb-3 uppercase text-sm tracking-wider"
+                }, "Actividades"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "space-y-3"
+                }, patient.tasks[assignment.shift].map(function(task) {
+                    var rec = records[task.id] || {};
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: task.id,
+                            onClick: handleToggle(task.id),
+                            className: "p-4 rounded-xl border flex items-center justify-between transition-all " + (rec.checked ? 'bg-[#0AB2BB]/10 border-[#0AB2BB]' : 'bg-slate-800 border-slate-700') + " " + (canEdit ? 'cursor-pointer active:scale-95' : 'opacity-70')
+                        }, /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "font-medium " + (rec.checked ? 'text-[#0AB2BB] line-through' : 'text-white')
+                        }, task.text), rec.checked && /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-xs text-[#0AB2BB] font-bold"
+                        }, "Completado: ", rec.completedAt)), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "w-6 h-6 rounded-full border-2 flex items-center justify-center " + (rec.checked ? 'bg-[#0AB2BB] border-[#0AB2BB]' : 'border-slate-500')
+                        }, rec.checked && /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-white text-xs"
+                        }, "\u2713")))
+                    );
+                }))), /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h4", {
+                    className: "text-white font-bold mb-3 uppercase text-sm tracking-wider"
+                }, "Bit\xE1cora"), /*#__PURE__*/
+                React.createElement("textarea", {
+                    className: "w-full bg-slate-800 border " + (canEdit ? 'border-slate-600 focus:border-[#0AB2BB]' : 'border-slate-800') + " rounded-xl p-3 text-white outline-none h-32",
+                    placeholder: canEdit ? "Escribe novedades del turno..." : "Sin observaciones",
+                    value: obs,
+                    onChange: function onChange(e) {
+                        return setObs(e.target.value);
+                    },
+                    onBlur: saveObs(),
+                    readOnly: !canEdit
+                }), saving && /*#__PURE__*/
+                React.createElement("span", {
+                    className: "text-xs text-[#0AB2BB] animate-pulse"
+                }, "Guardando...")))));
         }
 
         function App() {
-            const [user, setUser] = React.useState(null);
+            var _React$useState13 = React.useState(null),
+                user = _React$useState13[0],
+                setUser = _React$useState13[1];
+
+            var _React$useState14 = React.useState("login"),
+                view = _React$useState14[0],
+                setView = _React$useState14[1];
+
+            var _React$useState15 = React.useState(null),
+                currentShiftData = _React$useState15[0],
+                setCurrentShiftData = _React$useState15[1];
+
+            var handleLogin = function handleLogin(u) {
+                setUser(u);
+                if (u.role === 'admin') setView("admin");
+                else setView("calendar");
+            };
+
+            var handleLogout = function handleLogout() {
+                setUser(null);
+                setView("login");
+                setCurrentShiftData(null);
+            };
+
             return (
-                <div className="min-h-screen bg-slate-900 text-slate-100 relative">
-                    {!user ? <LoginScreen onLogin={setUser} /> : <Dashboard user={user} onLogout={() => setUser(null)} />}
-                </div>
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "relative"
+                }, view === "login" && /*#__PURE__*/
+                React.createElement(LoginScreen, {
+                    onLogin: handleLogin
+                }), view === "admin" && /*#__PURE__*/
+                React.createElement(AdminPanel, {
+                    user: user,
+                    onLogout: handleLogout
+                }), view === "calendar" && /*#__PURE__*/
+                React.createElement(CaregiverCalendar, {
+                    user: user,
+                    onLogout: handleLogout,
+                    onSelectShift: function onSelectShift(d, a) {
+                        setCurrentShiftData({
+                            date: d,
+                            assignment: a
+                        });
+                        setView("log");
+                    }
+                }), view === "log" && /*#__PURE__*/
+                React.createElement(DailyLog, {
+                    user: user,
+                    date: currentShiftData.date,
+                    assignment: currentShiftData.assignment,
+                    onBack: function onBack() {
+                        return setView("calendar");
+                    }
+                }))
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        var root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render( /*#__PURE__*/React.createElement(App, null));
     </script>
 </body>
 </html>
