@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Detalles de Comunidad</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="admin.css">
+    
+    <style>
+        .comunidad-header {
+            background: linear-gradient(135deg, #0066cc, #004d99);
+            color: white;
+            padding: 30px 0;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0066cc;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #0066cc;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #0066cc;
+        }
+        
+        .location-marker {
+            width: 40px;
+            height: 40px;
+            background: #0066cc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+        }
+        
+        .location-marker::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 102, 204, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            70% { transform: scale(1.2); opacity: 0; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
+        
+        #comunidadMap {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .school-badge {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .attendance-chart {
+            height: 300px;
+            position: relative;
+        }
+        
+        .weather-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .weather-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Detalles de Comunidad
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="comunidades.html" class="nav-link text-white">
+                    <i class="fas fa-list me-1"></i> Todas las Comunidades
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header de Comunidad -->
+    <div class="comunidad-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb bg-transparent p-0 mb-3">
+                            <li class="breadcrumb-item"><a href="index.html" class="text-white">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="comunidades.html" class="text-white">Comunidades</a></li>
+                            <li class="breadcrumb-item active text-white" aria-current="page" id="breadcrumbNombre">Cargando...</li>
+                        </ol>
+                    </nav>
+                    
+                    <h1 id="comunidadNombre" class="mb-2">Cargando nombre...</h1>
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="comunidadBadges">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <p class="mb-0" id="comunidadDescripcion">Cargando descripción...</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light me-2" onclick="editarComunidad()">
+                        <i class="fas fa-edit me-1"></i> Editar
+                    </button>
+                    <button class="btn btn-outline-light" onclick="exportarDatosComunidad()">
+                        <i class="fas fa-download me-1"></i> Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="container">
+        <!-- Estadísticas Rápidas -->
+        <div class="stats-grid mb-4">
+            <div class="stat-box">
+                <div class="stat-number" id="totalMaestros">0</div>
+                <div class="stat-label">Maestros Asignados</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="totalResponsables">0</div>
+                <div class="stat-label">Responsables que Visitan</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="asistenciasMes">0</div>
+                <div class="stat-label">Asistencias (Este Mes)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="actividadesPend">0</div>
+                <div class="stat-label">Actividades Pendientes</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="escuelasCount">0</div>
+                <div class="stat-label">Escuelas/Planteles</div>
+            </div>
+        </div>
+
+        <!-- Pestañas de Navegación -->
+        <ul class="nav nav-tabs mb-4" id="comunidadTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#infoTab">
+                    <i class="fas fa-info-circle me-2"></i> Información
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#maestrosTab">
+                    <i class="fas fa-user-graduate me-2"></i> Maestros
+                    <span class="badge bg-primary ms-2" id="badgeMaestros">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#asistenciasTab">
+                    <i class="fas fa-clipboard-check me-2"></i> Asistencias
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#actividadesTab">
+                    <i class="fas fa-tasks me-2"></i> Actividades
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mapaTab">
+                    <i class="fas fa-map-marked-alt me-2"></i> Mapa y Ubicación
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reportesTab">
+                    <i class="fas fa-chart-bar me-2"></i> Reportes
+                </button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las Pestañas -->
+        <div class="tab-content" id="comunidadTabsContent">
+            <!-- Pestaña Información -->
+            <div class="tab-pane fade show active" id="infoTab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Información General</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-map-marker-alt me-2"></i> Municipio:</strong>
+                                        <span id="infoMunicipio">Cargando...</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-road me-2"></i> Tipo de Vía:</strong>
+                                        <span id="infoTipoVia">Cargando...</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-users me-2"></i> Población Aprox:</strong>
+                                        <span id="infoPoblacion">Cargando...</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-calendar-alt me-2"></i> Año de Fundación:</strong>
+                                        <span id="infoFundacion">Cargando...</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-school me-2"></i> Escuelas:</strong>
+                                    <div id="escuelasList" class="mt-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-sticky-note me-2"></i> Observaciones:</strong>
+                                    <p id="infoObservaciones" class="mt-2">Cargando...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clima y Condiciones (ejemplo) -->
+                        <div class="weather-card">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="weather-icon">
+                                        <i class="fas fa-sun"></i>
+                                    </div>
+                                    <h3>25°C</h3>
+                                    <p>Despejado • Humedad: 65%</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><i class="fas fa-wind me-2"></i> Viento: 15 km/h</p>
+                                    <p><i class="fas fa-tint me-2"></i> Precipitación: 0%</p>
+                                    <p><i class="fas fa-eye me-2"></i> Visibilidad: 10 km</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Timeline de Actividad -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-history me-2"></i> Actividad Reciente</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="timeline" id="actividadTimeline">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        <p class="text-muted mt-2">Cargando actividad...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información de Contacto -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-address-book me-2"></i> Contactos Clave</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="contactosList">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay contactos registrados para esta comunidad
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="agregarContacto()">
+                                    <i class="fas fa-plus me-1"></i> Agregar Contacto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Maestros -->
+            <div class="tab-pane fade" id="maestrosTab">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i> Maestros Asignados</h5>
+                        <button class="btn btn-primary btn-sm" onclick="asignarMaestro()">
+                            <i class="fas fa-user-plus me-1"></i> Asignar Maestro
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover" id="tablaMaestrosComunidad">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Asignado Desde</th>
+                                    <th>Estado</th>
+                                    <th>Asistencias (30 días)</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyMaestros">
+                                <tr><td colspan="6" class="text-center">Cargando maestros...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Responsables que Visitan -->
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i> Responsables que Visitan esta Comunidad</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="responsablesGrid">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Asistencias -->
+            <div class="tab-pane fade" id="asistenciasTab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> Registros de Asistencia</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Filtrar por fecha:</label>
+                                        <input type="date" class="form-control" id="filtroFechaAsistencia">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Filtrar por tipo:</label>
+                                        <select class="form-select" id="filtroTipoAsistencia">
+                                            <option value="todos">Todos los tipos</option>
+                                            <option value="entrada">Solo entradas</option>
+                                            <option value="salida">Solo salidas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="tablaAsistencias">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha y Hora</th>
+                                                <th>Usuario</th>
+                                                <th>Tipo</th>
+                                                <th>Rol</th>
+                                                <th>Ubicación Declarada</th>
+                                                <th>GPS</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyAsistencias">
+                                            <tr><td colspan="7" class="text-center">Cargando asistencias...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Gráfico de Asistencias -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Estadísticas de Asistencia</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="attendance-chart">
+                                    <canvas id="asistenciasChart"></canvas>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">Últimos 7 días</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Horarios de Mayor Actividad -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-clock me-2"></i> Horarios Pico</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="horariosPico">
+                                    <p class="text-muted">Analizando patrones de asistencia...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Actividades -->
+            <div class="tab-pane fade" id="actividadesTab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i> Actividades Relacionadas</h5>
+                                <button class="btn btn-primary btn-sm" onclick="crearActividadComunidad()">
+                                    <i class="fas fa-plus me-1"></i> Nueva Actividad
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row" id="actividadesGrid">
+                                    <!-- Se llenará dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Materiales y Recursos -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-box-open me-2"></i> Materiales y Recursos Asignados</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="materialesList">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay materiales registrados para esta comunidad
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Calendario de Actividades -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Calendario</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="miniCalendario"></div>
+                                <div class="mt-3">
+                                    <h6>Próximas Actividades:</h6>
+                                    <div id="proximasActividades" class="mt-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recordatorios -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-bell me-2"></i> Recordatorios</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recordatoriosList">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        No hay recordatorios pendientes
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Mapa y Ubicación -->
+            <div class="tab-pane fade" id="mapaTab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-map me-2"></i> Mapa de la Comunidad</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="comunidadMap">
+                                    <div class="text-center py-5">
+                                        <div class="location-marker mx-auto mb-3">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <h5>Ubicación no especificada</h5>
+                                        <p class="text-muted">Esta comunidad no tiene coordenadas GPS registradas</p>
+                                        <button class="btn btn-primary" onclick="agregarUbicacion()">
+                                            <i class="fas fa-plus me-1"></i> Agregar Ubicación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Información de Ubicación -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Detalles de Ubicación</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="ubicacionInfo">
+                                    <p class="text-muted">No hay información de ubicación disponible</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Puntos de Referencia -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-landmark me-2"></i> Puntos de Referencia</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="puntosReferencia">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay puntos de referencia registrados
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="agregarPuntoReferencia()">
+                                    <i class="fas fa-plus me-1"></i> Agregar Punto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Reportes -->
+            <div class="tab-pane fade" id="reportesTab">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Reportes de Actividad</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tipo de Reporte:</label>
+                                        <select class="form-select" id="tipoReporte">
+                                            <option value="asistencias">Asistencias</option>
+                                            <option value="actividades">Actividades</option>
+                                            <option value="maestros">Rendimiento de Maestros</option>
+                                            <option value="comunidad">Estadísticas Generales</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Período:</label>
+                                        <select class="form-select" id="periodoReporte">
+                                            <option value="7">Últimos 7 días</option>
+                                            <option value="30">Últimos 30 días</option>
+                                            <option value="90">Últimos 3 meses</option>
+                                            <option value="365">Último año</option>
+                                            <option value="personalizado">Personalizado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div id="reporteContainer">
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Selecciona un tipo de reporte para generar</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                    <button class="btn btn-outline-primary" onclick="generarReporte()">
+                                        <i class="fas fa-sync-alt me-1"></i> Generar Reporte
+                                    </button>
+                                    <button class="btn btn-primary" onclick="exportarReporte()">
+                                        <i class="fas fa-file-export me-1"></i> Exportar a PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Métricas Clave -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i> Métricas Clave</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="metricasClave">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                        <p class="text-muted mt-2">Calculando métricas...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Alertas y Recomendaciones -->
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Recomendaciones</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recomendacionesList">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Todo en orden</strong>
+                                        <p class="mb-0 mt-2">No se detectaron problemas críticos en esta comunidad</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Comunidad -->
+    <div class="modal fade" id="modalEditarComunidad" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i> Editar Comunidad
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarComunidad">
+                        <input type="hidden" id="editComunidadId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="editNombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Municipio *</label>
+                                <input type="text" class="form-control" id="editMunicipio" value="Yuriria" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tipo de Comunidad</label>
+                                <select class="form-select" id="editTipo">
+                                    <option value="urbana">Urbana</option>
+                                    <option value="rural">Rural</option>
+                                    <option value="indigena">Indígena</option>
+                                    <option value="marginal">Marginal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tipo de Vía</label>
+                                <select class="form-select" id="editTipoVia">
+                                    <option value="pavimentada">Pavimentada</option>
+                                    <option value="terraceria">Terracería</option>
+                                    <option value="brecha">Brecha</option>
+                                    <option value="senderos">Senderos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Población Aproximada</label>
+                                <input type="number" class="form-control" id="editPoblacion" min="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Escuelas (separadas por coma)</label>
+                            <textarea class="form-control" id="editEscuelas" rows="3" placeholder="Ej: Escuela Primaria, Jardín de Niños, Telesecundaria"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Latitud (opcional)</label>
+                                <input type="number" step="any" class="form-control" id="editLatitud">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Longitud (opcional)</label>
+                                <input type="number" step="any" class="form-control" id="editLongitud">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="editObservaciones" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="editActiva" checked>
+                            <label class="form-check-label" for="editActiva">
+                                Comunidad activa (aparece en listas)
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarCambiosComunidad()">
+                        <i class="fas fa-save me-2"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Ubicación -->
+    <div class="modal fade" id="modalAgregarUbicacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-map-marker-alt me-2"></i> Agregar Ubicación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Selecciona la ubicación en el mapa o ingresa las coordenadas manualmente
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div id="mapaSeleccion" style="height: 300px; border-radius: 8px;"></div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Latitud</label>
+                            <input type="number" step="any" class="form-control" id="inputLatitud">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Longitud</label>
+                            <input type="number" step="any" class="form-control" id="inputLongitud">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary w-100" onclick="usarUbicacionActual()">
+                        <i class="fas fa-location-arrow me-2"></i> Usar mi ubicación actual
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUbicacion()">
+                        <i class="fas fa-save me-2"></i> Guardar Ubicación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="detalles-comunidad.js"></script>
+    
+    <script>
+        // Inicialización básica
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener ID de la comunidad de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const comunidadId = urlParams.get('id');
+            
+            if (!comunidadId) {
+                alert('No se especificó la comunidad');
+                window.location.href = 'comunidades.html';
+                return;
+            }
+            
+            // Inicializar Firebase
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            
+            // Verificar autenticación
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Cargar datos de la comunidad
+                await cargarComunidad(comunidadId);
+                await cargarEstadisticas(comunidadId);
+                await cargarMaestros(comunidadId);
+                await cargarAsistencias(comunidadId);
+                await cargarActividades(comunidadId);
+                
+                // Inicializar mapa si hay coordenadas
+                inicializarMapa();
+                
+                // Inicializar gráficos
+                inicializarGraficos();
+                
+                // Configurar eventos
+                document.getElementById('filtroFechaAsistencia').addEventListener('change', function() {
+                    filtrarAsistencias();
+                });
+                
+                document.getElementById('filtroTipoAsistencia').addEventListener('change', function() {
+                    filtrarAsistencias();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
