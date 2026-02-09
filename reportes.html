@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Reportes y Análisis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Reportes y Análisis
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-filter"></i> Filtros de Reporte
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Reporte</label>
+                            <select class="form-select" id="tipoReporte" onchange="cambiarTipoReporte()">
+                                <option value="asistencias">Asistencias</option>
+                                <option value="actividades">Actividades</option>
+                                <option value="usuarios">Usuarios</option>
+                                <option value="comunidades">Comunidades</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Rango de Fechas</label>
+                            <input type="text" class="form-control" id="rangoFechas" 
+                                   placeholder="Selecciona rango">
+                        </div>
+                        
+                        <div id="filtrosAdicionales">
+                            <!-- Filtros adicionales se cargarán dinámicamente -->
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-primary" onclick="generarReporte()">
+                                <i class="fas fa-chart-bar"></i> Generar Reporte
+                            </button>
+                            <button class="btn btn-success" onclick="exportarReporte()">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="guardarReporte()">
+                                <i class="fas fa-save"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-history"></i> Reportes Guardados
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush" id="listaReportesGuardados">
+                            <!-- Lista de reportes guardados -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-chart-line"></i> Reporte de Asistencias
+                        </h4>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" onclick="recargarReporte()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-success" onclick="imprimirReporte()">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-info dropdown-toggle" 
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-chart-pie"></i> Gráficos
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="cambiarTipoGrafico('bar')">Barras</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="cambiarTipoGrafico('line')">Líneas</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="cambiarTipoGrafico('pie')">Pastel</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="cambiarTipoGrafico('doughnut')">Donas</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="chart-container">
+                                    <canvas id="chartReporte"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Resumen</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="resumenReporte">
+                                            <!-- Resumen se cargará aquí -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaReporte">
+                                <thead id="theadReporte">
+                                    <!-- Encabezados dinámicos -->
+                                </thead>
+                                <tbody id="tbodyReporte">
+                                    <!-- Datos del reporte -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <i class="fas fa-map-marker-alt"></i> Distribución Geográfica
+                            </div>
+                            <div class="card-body">
+                                <div id="mapaReporte" style="height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-calendar-alt"></i> Tendencia Temporal
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="chartTendencia"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="reportes.js"></script>
+</body>
+</html>
