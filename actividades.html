@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Gestión de Actividades</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Gestión de Actividades
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-plus-circle"></i> Crear Nueva
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success mb-2" onclick="crearActividad('nota')">
+                                <i class="fas fa-sticky-note"></i> Nota/Aviso
+                            </button>
+                            <button class="btn btn-info mb-2" onclick="crearActividad('checklist')">
+                                <i class="fas fa-tasks"></i> Checklist
+                            </button>
+                            <button class="btn btn-warning mb-2" onclick="crearActividad('cuestionario')">
+                                <i class="fas fa-question-circle"></i> Cuestionario
+                            </button>
+                            <button class="btn btn-secondary mb-2" onclick="crearActividad('documento')">
+                                <i class="fas fa-file-pdf"></i> Documento/PDF
+                            </button>
+                            <button class="btn btn-primary mb-2" onclick="crearActividad('encuesta')">
+                                <i class="fas fa-poll"></i> Encuesta
+                            </button>
+                            <button class="btn btn-dark" onclick="crearActividad('tarea')">
+                                <i class="fas fa-briefcase"></i> Tarea Especial
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Plantillas Guardadas</label>
+                            <select class="form-select" id="selectPlantilla" onchange="cargarPlantilla()">
+                                <option value="">Selecciona una plantilla</option>
+                                <option value="reporte_semanal">Reporte Semanal</option>
+                                <option value="checklist_limpieza">Checklist de Limpieza</option>
+                                <option value="cuestionario_seguimiento">Cuestionario de Seguimiento</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-outline-primary w-100" onclick="guardarComoPlantilla()">
+                            <i class="fas fa-save"></i> Guardar como Plantilla
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-filter"></i> Filtros
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo:</label>
+                            <select class="form-select" id="filtroTipo">
+                                <option value="todos">Todos los tipos</option>
+                                <option value="nota">Notas</option>
+                                <option value="checklist">Checklists</option>
+                                <option value="cuestionario">Cuestionarios</option>
+                                <option value="documento">Documentos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Estado:</label>
+                            <select class="form-select" id="filtroEstado">
+                                <option value="todos">Todos los estados</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="en_progreso">En progreso</option>
+                                <option value="completado">Completados</option>
+                                <option value="vencido">Vencidos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Fecha:</label>
+                            <input type="text" class="form-control" id="filtroFecha" placeholder="Rango de fechas">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Prioridad:</label>
+                            <select class="form-select" id="filtroPrioridad">
+                                <option value="todos">Todas</option>
+                                <option value="urgente">Urgente</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Media</option>
+                                <option value="baja">Baja</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100" onclick="aplicarFiltrosActividades()">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-tasks"></i> Actividades
+                            <span class="badge bg-primary ms-2" id="contadorActividades">0</span>
+                        </h4>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" onclick="recargarActividades()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-success" onclick="exportarActividades()">
+                                <i class="fas fa-file-export"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaActividades">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Destinatarios</th>
+                                        <th>Fecha Límite</th>
+                                        <th>Prioridad</th>
+                                        <th>Estado</th>
+                                        <th>Progreso</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyActividades">
+                                    <tr><td colspan="8" class="text-center">Cargando actividades...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <i class="fas fa-exclamation-triangle"></i> Próximas a Vencer
+                            </div>
+                            <div class="card-body">
+                                <div id="actividadesProximasVencer">
+                                    Cargando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-chart-line"></i> Estadísticas
+                            </div>
+                            <div class="card-body">
+                                <div id="estadisticasActividades">
+                                    Cargando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Actividad -->
+    <div class="modal fade" id="modalActividad" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalActividadTitulo">
+                        <i class="fas fa-plus-circle"></i> Nueva Actividad
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenido dinámico se carga aquí desde admin.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="actividades.js"></script>
+</body>
+</html>
