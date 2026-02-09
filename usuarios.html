@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Gestión de Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Gestión de Usuarios
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-filter"></i> Filtros y Acciones
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Filtrar por Rol:</label>
+                            <select class="form-select" id="filtroRol">
+                                <option value="todos">Todos los roles</option>
+                                <option value="maestro">Maestros</option>
+                                <option value="responsable">Responsables</option>
+                                <option value="administrador">Administradores</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Filtrar por Estado:</label>
+                            <select class="form-select" id="filtroEstado">
+                                <option value="todos">Todos los estados</option>
+                                <option value="activo">Activos</option>
+                                <option value="inactivo">Inactivos</option>
+                                <option value="pendiente">Pendientes</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Filtrar por Comunidad:</label>
+                            <select class="form-select" id="filtroComunidad">
+                                <option value="todos">Todas las comunidades</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="aplicarFiltros()">
+                                <i class="fas fa-filter"></i> Aplicar Filtros
+                            </button>
+                            <button class="btn btn-success" onclick="abrirModalNuevoUsuario()">
+                                <i class="fas fa-user-plus"></i> Nuevo Usuario
+                            </button>
+                            <button class="btn btn-warning" onclick="exportarUsuariosExcel()">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            </button>
+                            <button class="btn btn-info" onclick="importarUsuariosCSV()">
+                                <i class="fas fa-file-import"></i> Importar desde CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-chart-pie"></i> Estadísticas
+                    </div>
+                    <div class="card-body">
+                        <div id="estadisticasUsuarios">
+                            Cargando estadísticas...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-users"></i> Lista de Usuarios
+                            <span class="badge bg-primary ms-2" id="contadorUsuarios">0</span>
+                        </h4>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" placeholder="Buscar usuario..." id="buscarUsuario">
+                            <button class="btn btn-outline-primary" type="button" onclick="buscarUsuarios()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover" id="tablaUsuariosCompleta">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Rol</th>
+                                    <th>Comunidad/Comunidades</th>
+                                    <th>Contacto</th>
+                                    <th>Estado</th>
+                                    <th>Última Actividad</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyUsuarios">
+                                <tr><td colspan="8" class="text-center">Cargando usuarios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Usuario -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalUsuarioTitulo">
+                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUsuario">
+                        <input type="hidden" id="usuarioId">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre Completo *</label>
+                                    <input type="text" class="form-control" id="nombreUsuario" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Correo Electrónico *</label>
+                                    <input type="email" class="form-control" id="emailUsuario" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefonoUsuario">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Rol *</label>
+                                    <select class="form-select" id="rolUsuario" required onchange="cambiarCamposRol()">
+                                        <option value="">Selecciona un rol</option>
+                                        <option value="maestro">Maestro</option>
+                                        <option value="responsable">Responsable</option>
+                                        <option value="administrador">Administrador</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="camposMaestro" style="display: none;">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Comunidad Asignada *</label>
+                                    <select class="form-select" id="comunidadMaestro">
+                                        <option value="">Selecciona una comunidad</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Escuela</label>
+                                    <input type="text" class="form-control" id="escuelaMaestro" 
+                                           placeholder="Nombre de la escuela">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="camposResponsable" style="display: none;">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Comunidades a Supervisar *</label>
+                                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px;">
+                                        <div id="checklistComunidades">
+                                            Cargando comunidades...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Contraseña *</label>
+                                    <input type="password" class="form-control" id="passwordUsuario" required>
+                                    <small class="text-muted">Mínimo 6 caracteres</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Confirmar Contraseña *</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha de Ingreso</label>
+                                    <input type="date" class="form-control" id="fechaIngreso">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" id="estadoUsuario">
+                                        <option value="activo">Activo</option>
+                                        <option value="inactivo">Inactivo</option>
+                                        <option value="pendiente">Pendiente</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observacionesUsuario" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+                        <i class="fas fa-save"></i> Guardar Usuario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="usuarios.js"></script>
+</body>
+</html>
