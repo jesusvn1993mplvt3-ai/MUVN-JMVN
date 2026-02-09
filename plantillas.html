@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Plantillas y Modelos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Plantillas y Modelos
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-plus"></i> Nueva Plantilla
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de la Plantilla *</label>
+                            <input type="text" class="form-control" id="nombrePlantilla" 
+                                   placeholder="Ej: Reporte Semanal">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" id="tipoPlantilla">
+                                <option value="nota">Nota/Aviso</option>
+                                <option value="checklist">Checklist</option>
+                                <option value="cuestionario">Cuestionario</option>
+                                <option value="documento">Documento</option>
+                                <option value="encuesta">Encuesta</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Categoría</label>
+                            <select class="form-select" id="categoriaPlantilla">
+                                <option value="general">General</option>
+                                <option value="reportes">Reportes</option>
+                                <option value="seguimiento">Seguimiento</option>
+                                <option value="evaluacion">Evaluación</option>
+                                <option value="administrativo">Administrativo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcionPlantilla" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="crearPlantilla()">
+                                <i class="fas fa-save"></i> Crear Plantilla
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="importarPlantilla()">
+                                <i class="fas fa-file-import"></i> Importar desde JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-lightbulb"></i> Plantillas Sugeridas
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action" 
+                               onclick="cargarPlantillaSugerida('reporte_semanal')">
+                                <i class="fas fa-file-alt text-primary"></i>
+                                <strong>Reporte Semanal</strong>
+                                <small class="d-block text-muted">Para seguimiento de actividades</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action"
+                               onclick="cargarPlantillaSugerida('checklist_limpieza')">
+                                <i class="fas fa-broom text-success"></i>
+                                <strong>Checklist de Limpieza</strong>
+                                <small class="d-block text-muted">Mantenimiento del aula</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action"
+                               onclick="cargarPlantillaSugerida('cuestionario_seguimiento')">
+                                <i class="fas fa-question-circle text-warning"></i>
+                                <strong>Cuestionario de Seguimiento</strong>
+                                <small class="d-block text-muted">Evaluación de alumnos</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action"
+                               onclick="cargarPlantillaSugerida('encuesta_satisfaccion')">
+                                <i class="fas fa-poll text-info"></i>
+                                <strong>Encuesta de Satisfacción</strong>
+                                <small class="d-block text-muted">Para padres de familia</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-layer-group"></i> Mis Plantillas
+                            <span class="badge bg-primary ms-2" id="contadorPlantillas">0</span>
+                        </h4>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" placeholder="Buscar plantilla..." 
+                                   id="buscarPlantilla">
+                            <button class="btn btn-outline-primary" type="button" onclick="buscarPlantillas()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="gridPlantillas">
+                            <!-- Las plantillas se cargarán aquí en formato grid -->
+                            <div class="col-12 text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando plantillas...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <i class="fas fa-edit"></i> Editor de Plantillas
+                            </div>
+                            <div class="card-body">
+                                <div id="editorPlantilla">
+                                    <p class="text-muted">Selecciona una plantilla para editarla</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-eye"></i> Vista Previa
+                            </div>
+                            <div class="card-body">
+                                <div id="previewPlantilla">
+                                    <p class="text-muted">La vista previa aparecerá aquí</p>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-primary" onclick="usarPlantilla()">
+                                        <i class="fas fa-play-circle"></i> Usar esta Plantilla
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="exportarPlantilla()">
+                                        <i class="fas fa-download"></i> Exportar como JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="plantillas.js"></script>
+</body>
+</html>
