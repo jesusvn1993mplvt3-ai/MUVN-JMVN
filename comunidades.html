@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Gestión de Comunidades</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                <strong>CONAFE</strong> / Comunidades y Escuelas
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-map-marker-alt"></i> Nueva Comunidad
+                    </div>
+                    <div class="card-body">
+                        <form id="formComunidad">
+                            <input type="hidden" id="comunidadId">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Nombre de la Comunidad *</label>
+                                <input type="text" class="form-control" id="nombreComunidad" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Tipo *</label>
+                                <select class="form-select" id="tipoComunidad" required>
+                                    <option value="urbana">Urbana</option>
+                                    <option value="rural" selected>Rural</option>
+                                    <option value="indigena">Indígena</option>
+                                    <option value="marginal">Marginal</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Municipio *</label>
+                                <input type="text" class="form-control" id="municipioComunidad" 
+                                       value="Yuriria" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Estado *</label>
+                                <input type="text" class="form-control" id="estadoComunidad" 
+                                       value="Guanajuato" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Coordenadas (opcional)</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="number" step="any" class="form-control" 
+                                               id="latitudComunidad" placeholder="Latitud">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" step="any" class="form-control" 
+                                               id="longitudComunidad" placeholder="Longitud">
+                                    </div>
+                                </div>
+                                <small class="text-muted">O usa el mapa para ubicar</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcionComunidad" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="activaComunidad" checked>
+                                <label class="form-check-label" for="activaComunidad">Comunidad activa</label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Comunidad
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
+                                    <i class="fas fa-times"></i> Limpiar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-school"></i> Gestión de Escuelas
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Selecciona Comunidad</label>
+                            <select class="form-select" id="selectComunidadEscuelas" 
+                                    onchange="cargarEscuelasComunidad()">
+                                <option value="">Selecciona una comunidad</option>
+                            </select>
+                        </div>
+                        
+                        <div id="escuelasContainer" style="display: none;">
+                            <h6>Escuelas en <span id="nombreComunidadSeleccionada"></span></h6>
+                            <div id="listaEscuelas" class="mb-3" style="max-height: 200px; overflow-y: auto;">
+                                <!-- Lista de escuelas -->
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="nuevaEscuela" 
+                                       placeholder="Nombre de nueva escuela">
+                                <button class="btn btn-success" type="button" onclick="agregarEscuela()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-list"></i> Lista de Comunidades
+                            <span class="badge bg-primary ms-2" id="contadorComunidades">0</span>
+                        </h4>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" placeholder="Buscar comunidad..." 
+                                   id="buscarComunidad">
+                            <button class="btn btn-outline-primary" type="button" onclick="buscarComunidades()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaComunidades">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Escuelas</th>
+                                        <th>Maestros</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyComunidades">
+                                    <tr><td colspan="6" class="text-center">Cargando comunidades...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="fas fa-map"></i> Mapa de Comunidades
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="mapaComunidades" style="height: 400px; width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="admin.js"></script>
+    <script src="comunidades.js"></script>
+</body>
+</html>
