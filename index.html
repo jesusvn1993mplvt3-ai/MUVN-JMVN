@@ -3,233 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONAFE - Panel de Control</title>
+    <title>CONAFE - Sistema de Gestión Escolar</title>
+    
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="admin.css">
+    
+    <style>
+        :root {
+            --conafe-azul: #0066cc;
+            --conafe-azul-oscuro: #004d99;
+            --conafe-verde: #28a745;
+            --conafe-amarillo: #ffc107;
+            --conafe-blanco: #ffffff;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fb 0%, #e4edf5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 1200px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 102, 204, 0.15);
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--conafe-azul) 0%, var(--conafe-azul-oscuro) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://www.gob.mx/cms/uploads/article/main_image/61730/5F6C93F7-300B-4683-B4F7-1B4C6CCACAE2.jpeg') center/cover no-repeat;
+            opacity: 0.2;
+        }
+        
+        .logo-container {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 20px;
+        }
+        
+        .logo-img {
+            max-height: 80px;
+            margin-bottom: 15px;
+        }
+        
+        .login-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .login-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .login-card {
+            background: white;
+            padding: 40px;
+        }
+        
+        .login-title {
+            color: var(--conafe-azul-oscuro);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .login-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, var(--conafe-azul), var(--conafe-verde));
+        }
+        
+        .form-control {
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--conafe-azul);
+            box-shadow: 0 0 0 0.25rem rgba(0, 102, 204, 0.25);
+        }
+        
+        .input-group-text {
+            background: #f8f9fa;
+            border: 2px solid #e0e6ed;
+            border-right: none;
+            color: var(--conafe-azul);
+        }
+        
+        .form-select {
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .form-select:focus {
+            border-color: var(--conafe-azul);
+            box-shadow: 0 0 0 0.25rem rgba(0, 102, 204, 0.25);
+        }
+        
+        .btn-conafe {
+            background: linear-gradient(135deg, var(--conafe-azul) 0%, var(--conafe-azul-oscuro) 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-conafe:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+            color: white;
+        }
+        
+        .btn-conafe:active {
+            transform: translateY(0);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .login-footer a {
+            color: var(--conafe-azul);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .features {
+            background: #f8f9fa;
+            padding: 40px;
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--conafe-azul) 0%, var(--conafe-azul-oscuro) 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+        
+        .feature-content h4 {
+            color: var(--conafe-azul-oscuro);
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .feature-content p {
+            color: #666;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .features {
+                display: none;
+            }
+            
+            .login-container {
+                max-width: 500px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .login-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .login-card {
+                padding: 30px 20px;
+            }
+            
+            .login-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navbar Superior -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-chalkboard-teacher me-2"></i>
-                <strong>CONAFE</strong> Panel Administrativo
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="cargarSeccion('dashboard')">
-                            <i class="fas fa-home"></i> Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-users"></i> Usuarios
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="cargarSeccion('maestros')">Maestros</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="cargarSeccion('responsables')">Responsables</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="usuarios.html" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Gestión Completa
-                            </a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="comunidades.html" target="_blank">
-                            <i class="fas fa-map-marker-alt"></i> Comunidades
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="actividades.html" target="_blank">
-                            <i class="fas fa-tasks"></i> Actividades
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="reportes.html" target="_blank">
-                            <i class="fas fa-chart-bar"></i> Reportes
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> Admin
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="configuracion.html" target="_blank">
-                                <i class="fas fa-cog"></i> Configuración
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="cerrarSesion()">
-                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-container">
+                <h1>CONAFE</h1>
+                <p>Sistema de Gestión y Monitoreo Educativo</p>
             </div>
         </div>
-    </nav>
-
-    <!-- Contenedor Principal -->
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" id="sidebarMenu">
-                <div class="position-sticky pt-3">
-                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
-                        <span>Dashboard</span>
-                    </h6>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#" onclick="cargarSeccion('dashboard')">
-                                <i class="fas fa-tachometer-alt"></i> Panel General
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="cargarSeccion('estadisticas')">
-                                <i class="fas fa-chart-line"></i> Estadísticas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="cargarSeccion('mapa')">
-                                <i class="fas fa-map"></i> Mapa en Tiempo Real
-                            </a>
-                        </li>
-                    </ul>
-
-                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
-                        <span>Gestión</span>
-                    </h6>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="cargarSeccion('asistencias')">
-                                <i class="fas fa-clipboard-check"></i> Asistencias
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="cargarSeccion('buzon')">
-                                <i class="fas fa-inbox"></i> Buzón de Mensajes
-                                <span class="badge bg-danger float-end" id="badge-mensajes">0</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="cargarSeccion('alertas')">
-                                <i class="fas fa-bell"></i> Alertas y Notificaciones
-                                <span class="badge bg-warning float-end" id="badge-alertas">0</span>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
-                        <span>Herramientas</span>
-                    </h6>
-                    <ul class="nav flex-column mb-2">
-                        <li class="nav-item">
-                            <a class="nav-link" href="plantillas.html" target="_blank">
-                                <i class="fas fa-file-alt"></i> Plantillas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="abrirImportador()">
-                                <i class="fas fa-file-import"></i> Importar Datos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="exportarTodo()">
-                                <i class="fas fa-file-export"></i> Exportar Todo
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Contenido Principal -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <!-- Breadcrumb -->
-                <nav aria-label="breadcrumb" class="mt-3">
-                    <ol class="breadcrumb" id="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                    </ol>
-                </nav>
-
-                <!-- Secciones Dinámicas -->
-                <div id="contenido-dinamico">
-                    <!-- Se cargará dinámicamente -->
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Modal para Vista Previa Móvil -->
-    <div class="modal fade" id="modalVistaPrevia" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-mobile-alt"></i> Vista Previa - App Móvil
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card border-primary">
-                                <div class="card-header bg-primary text-white">
-                                    <i class="fas fa-eye"></i> Previsualización
-                                </div>
-                                <div class="card-body" style="background: #121212; min-height: 500px;">
-                                    <div id="vista-movil-contenido">
-                                        <!-- Se carga dinámicamente -->
-                                    </div>
-                                </div>
-                            </div>
+        
+        <div class="row g-0">
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="features">
+                    <h3 class="mb-4" style="color: var(--conafe-azul-oscuro);">Características del Sistema</h3>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
                         </div>
-                        <div class="col-md-6">
-                            <h6>Configuración de Vista</h6>
-                            <div class="form-group mb-3">
-                                <label>Tipo de Dispositivo:</label>
-                                <select class="form-select" id="select-tipo-dispositivo">
-                                    <option value="mobile">Teléfono Móvil</option>
-                                    <option value="tablet">Tablet</option>
-                                </select>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Tema:</label>
-                                <select class="form-select" id="select-tema">
-                                    <option value="dark">Oscuro (Default)</option>
-                                    <option value="light">Claro</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-primary w-100" onclick="actualizarVistaPrevia()">
-                                <i class="fas fa-sync-alt"></i> Actualizar Vista
-                            </button>
-                            <hr>
-                            <h6>Información de la Actividad</h6>
-                            <div id="info-actividad" class="small">
-                                <!-- Información de la actividad -->
-                            </div>
+                        <div class="feature-content">
+                            <h4>Gestión de Personal</h4>
+                            <p>Registro y control de maestros, instructores y personal educativo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Control de Comunidades</h4>
+                            <p>Administración de comunidades educativas y su ubicación geográfica</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Registro de Asistencias</h4>
+                            <p>Sistema de control de asistencia con geolocalización</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Reportes y Análisis</h4>
+                            <p>Generación de reportes estadísticos y seguimiento de indicadores</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>Acceso Móvil</h4>
+                            <p>Interfaz optimizada para dispositivos móviles en campo</p>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div class="col-lg-6">
+                <div class="login-card">
+                    <h2 class="login-title">Iniciar Sesión</h2>
+                    
+                    <form id="loginForm">
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" 
+                                       placeholder="usuario@conafe.edu.mx" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" 
+                                       placeholder="Ingresa tu contraseña" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="tipoUsuario" class="form-label">Tipo de Usuario</label>
+                            <select class="form-select" id="tipoUsuario" required>
+                                <option value="" disabled selected>Selecciona tu tipo de usuario</option>
+                                <option value="responsable">Responsable / Supervisor</option>
+                                <option value="maestro">Maestro / Instructor</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-conafe" id="btnLogin">
+                            <i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión
+                        </button>
+                        
+                        <div class="login-footer">
+                            <p class="mb-2">¿Problemas para acceder? <a href="#" id="btnRecuperar">Recuperar contraseña</a></p>
+                            <p>© 2024 CONAFE - Sistema de Gestión Educativa</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
+
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="admin.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Configuración -->
+    <script src="config.js"></script>
+    
+    <!-- Script de Login -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si ya hay sesión
+            const usuario = conafeConfig.obtenerSesion();
+            if (usuario) {
+                redirigirSegunRol(usuario);
+                return;
+            }
+            
+            // Configurar formulario de login
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+                    const tipoUsuario = document.getElementById('tipoUsuario').value;
+                    
+                    if (!email || !password || !tipoUsuario) {
+                        conafeConfig.mostrarAlerta('Por favor completa todos los campos', 'warning');
+                        return;
+                    }
+                    
+                    iniciarSesion(email, password, tipoUsuario);
+                });
+            }
+            
+            // Botón de recuperar contraseña
+            const btnRecuperar = document.getElementById('btnRecuperar');
+            if (btnRecuperar) {
+                btnRecuperar.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const email = prompt('Ingresa tu correo electrónico para recuperar contraseña:');
+                    if (email) {
+                        recuperarContrasena(email);
+                    }
+                });
+            }
+        });
+
+        async function iniciarSesion(email, password, tipoUsuario) {
+            try {
+                // Deshabilitar botón durante login
+                const btnLogin = document.getElementById('btnLogin');
+                const originalText = btnLogin.innerHTML;
+                btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Iniciando sesión...';
+                btnLogin.disabled = true;
+                
+                // Intentar autenticar con Firebase Auth
+                const credenciales = await auth.signInWithEmailAndPassword(email, password);
+                const user = credenciales.user;
+                
+                // Buscar usuario en la base de datos
+                const snapshot = await conafeConfig.db.usuarios.orderByChild('email').equalTo(email).once('value');
+                
+                if (!snapshot.exists()) {
+                    conafeConfig.mostrarAlerta('Usuario no encontrado en el sistema', 'danger');
+                    await auth.signOut();
+                    return;
+                }
+                
+                // Obtener datos del usuario
+                let usuarioData = null;
+                snapshot.forEach(childSnapshot => {
+                    usuarioData = childSnapshot.val();
+                    usuarioData.id = childSnapshot.key;
+                });
+                
+                // Verificar rol
+                if (usuarioData.rol !== tipoUsuario) {
+                    conafeConfig.mostrarAlerta(`Este usuario no es un ${tipoUsuario === 'maestro' ? 'maestro' : 'responsable'}`, 'warning');
+                    await auth.signOut();
+                    return;
+                }
+                
+                // Verificar si está activo
+                if (usuarioData.activo === false) {
+                    conafeConfig.mostrarAlerta('Usuario inactivo. Contacta al administrador.', 'danger');
+                    await auth.signOut();
+                    return;
+                }
+                
+                // Guardar sesión
+                conafeConfig.guardarSesion(usuarioData);
+                
+                // Redirigir según rol
+                redirigirSegunRol(usuarioData);
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                let mensaje = 'Error en la autenticación';
+                
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        mensaje = 'Usuario no encontrado';
+                        break;
+                    case 'auth/wrong-password':
+                        mensaje = 'Contraseña incorrecta';
+                        break;
+                    case 'auth/invalid-email':
+                        mensaje = 'Email inválido';
+                        break;
+                    case 'auth/user-disabled':
+                        mensaje = 'Usuario deshabilitado';
+                        break;
+                    case 'auth/too-many-requests':
+                        mensaje = 'Demasiados intentos. Intenta más tarde.';
+                        break;
+                    default:
+                        mensaje = 'Error desconocido. Intenta nuevamente.';
+                }
+                
+                conafeConfig.mostrarAlerta(mensaje, 'danger');
+            } finally {
+                // Rehabilitar botón
+                const btnLogin = document.getElementById('btnLogin');
+                if (btnLogin) {
+                    btnLogin.innerHTML = originalText;
+                    btnLogin.disabled = false;
+                }
+            }
+        }
+
+        function redirigirSegunRol(usuario) {
+            switch(usuario.rol) {
+                case 'admin':
+                case 'responsable':
+                    window.location.href = 'dashboard.html';
+                    break;
+                case 'maestro':
+                    window.location.href = 'panel-maestro.html';
+                    break;
+                default:
+                    window.location.href = 'dashboard.html';
+            }
+        }
+
+        async function recuperarContrasena(email) {
+            try {
+                await auth.sendPasswordResetEmail(email);
+                conafeConfig.mostrarAlerta('Se ha enviado un correo para restablecer tu contraseña', 'success');
+            } catch (error) {
+                console.error('Error recuperando contraseña:', error);
+                conafeConfig.mostrarAlerta('Error al enviar correo de recuperación', 'danger');
+            }
+        }
+    </script>
 </body>
 </html>
