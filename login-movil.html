@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CONAFE - Login Móvil</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --conafe-azul: #0066cc;
+            --conafe-azul-oscuro: #004d99;
+            --conafe-verde: #28a745;
+            --conafe-amarillo: #ffc107;
+            --conafe-rojo: #dc3545;
+        }
+        
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .login-header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            color: white;
+            position: relative;
+        }
+        
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .logo-circle i {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .login-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .login-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 25px;
+            padding: 30px 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .login-title {
+            color: var(--conafe-azul-oscuro);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--conafe-azul);
+            font-size: 1.2rem;
+            z-index: 2;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--conafe-azul);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%230066cc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px 12px;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--conafe-azul);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--conafe-azul) 0%, var(--conafe-azul-oscuro) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        
+        .login-footer a {
+            color: var(--conafe-azul);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Toggle password visibility */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 3;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Quick login options */
+        .quick-login {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .quick-login-title {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .quick-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .quick-btn {
+            padding: 12px 8px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            background: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quick-btn:hover {
+            border-color: var(--conafe-azul);
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        .quick-btn i {
+            font-size: 1.2rem;
+            color: var(--conafe-azul);
+        }
+        
+        /* Remember me */
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .remember-me input {
+            margin-right: 8px;
+        }
+        
+        /* Alert messages */
+        .alert-mobile {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 15px;
+            }
+            
+            .login-header {
+                padding: 30px 15px 15px;
+            }
+            
+            .logo-circle {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .login-card {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            
+            .quick-options {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (min-height: 700px) {
+            .login-card {
+                justify-content: center;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .login-card {
+                background: #1e1e1e;
+                color: #ffffff;
+            }
+            
+            .form-label {
+                color: #cccccc;
+            }
+            
+            .form-control,
+            .form-select {
+                background: #2d2d2d;
+                border-color: #444;
+                color: #ffffff;
+            }
+            
+            .form-control:focus,
+            .form-select:focus {
+                background: #333;
+                border-color: var(--conafe-azul);
+            }
+            
+            .quick-btn {
+                background: #2d2d2d;
+                border-color: #444;
+                color: #cccccc;
+            }
+            
+            .login-footer {
+                color: #999;
+            }
+        }
+        
+        /* Connection status */
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            z-index: 100;
+            opacity: 0.8;
+        }
+        
+        .online {
+            background: var(--conafe-verde);
+        }
+        
+        .offline {
+            background: var(--conafe-rojo);
+        }
+        
+        /* Version info */
+        .version {
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Status -->
+    <div class="connection-status online" id="connectionStatus" title="Conectado">
+        <i class="fas fa-wifi"></i>
+    </div>
+    
+    <div class="login-container">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-circle">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1>CONAFE</h1>
+            <p>Sistema de Gestión Móvil</p>
+            <div class="version">Versión 1.0</div>
+        </div>
+        
+        <!-- Login Card -->
+        <div class="login-card">
+            <h2 class="login-title">Iniciar Sesión</h2>
+            
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm">
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" class="form-control" id="email" 
+                               placeholder="usuario@conafe.edu.mx" required
+                               value="responsable@conafe.edu.mx">
+                    </div>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="password" 
+                               placeholder="Ingresa tu contraseña" required
+                               value="conafe2024">
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- User Type -->
+                <div class="form-group">
+                    <label for="tipoUsuario" class="form-label">Tipo de Usuario</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-tag input-icon"></i>
+                        <select class="form-select" id="tipoUsuario" required>
+                            <option value="" disabled>Selecciona tu rol</option>
+                            <option value="responsable" selected>Responsable / Supervisor</option>
+                            <option value="maestro">Maestro / Instructor</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe" style="color: #666; font-size: 0.9rem;">
+                        Recordar mis datos
+                    </label>
+                </div>
+                
+                <!-- Login Button -->
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Iniciar Sesión</span>
+                </button>
+            </form>
+            
+            <!-- Quick Login Options -->
+            <div class="quick-login">
+                <div class="quick-login-title">Acceso rápido para pruebas:</div>
+                <div class="quick-options">
+                    <button class="quick-btn" onclick="cargarCredenciales('responsable')">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Responsable</span>
+                    </button>
+                    <button class="quick-btn" onclick="cargarCredenciales('maestro')">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Maestro</span>
+                    </button>
+                    <button class="quick-btn" onclick="cargarCredenciales('admin')">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Administrador</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>
+                    ¿Problemas para acceder? 
+                    <a href="#" id="btnRecuperar">Recuperar contraseña</a>
+                </p>
+                <p>© 2024 CONAFE - Versión Móvil</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Configuración -->
+    <script src="config.js"></script>
+    
+    <!-- Script del Login Móvil -->
+    <script>
+        // Variables globales
+        let isOnline = true;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si ya hay sesión
+            const usuario = conafeConfig.obtenerSesion();
+            if (usuario) {
+                redirigirSegunRol(usuario);
+                return;
+            }
+            
+            // Cargar credenciales guardadas
+            cargarCredencialesGuardadas();
+            
+            // Configurar formulario de login
+            configurarFormulario();
+            
+            // Configurar eventos
+            configurarEventos();
+            
+            // Monitorear conexión
+            monitorearConexion();
+            
+            // Configurar toggle de contraseña
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.className = 'fas fa-eye-slash';
+                    this.setAttribute('title', 'Ocultar contraseña');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.className = 'fas fa-eye';
+                    this.setAttribute('title', 'Mostrar contraseña');
+                }
+            });
+        });
+
+        function configurarFormulario() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+                    const tipoUsuario = document.getElementById('tipoUsuario').value;
+                    
+                    if (!email || !password || !tipoUsuario) {
+                        mostrarAlerta('Por favor completa todos los campos', 'warning');
+                        return;
+                    }
+                    
+                    // Guardar credenciales si está marcado "Recordar"
+                    if (document.getElementById('rememberMe').checked) {
+                        guardarCredenciales(email, password, tipoUsuario);
+                    }
+                    
+                    iniciarSesion(email, password, tipoUsuario);
+                });
+            }
+        }
+
+        function configurarEventos() {
+            // Botón de recuperar contraseña
+            const btnRecuperar = document.getElementById('btnRecuperar');
+            if (btnRecuperar) {
+                btnRecuperar.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarModalRecuperar();
+                });
+            }
+            
+            // Detectar clic fuera del formulario para ocultar teclado
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.form-control') && !e.target.closest('.form-select')) {
+                    // Ocultar teclado virtual en móvil
+                    document.activeElement.blur();
+                }
+            });
+            
+            // Detectar cuando el teclado se muestra/esconde
+            window.addEventListener('resize', function() {
+                // Ajustar altura del contenedor cuando el teclado aparece
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            });
+            
+            // Prevenir zoom en inputs
+            document.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('focus', function() {
+                    setTimeout(() => {
+                        document.body.style.zoom = "100%";
+                    }, 100);
+                });
+            });
+        }
+
+        function cargarCredencialesGuardadas() {
+            try {
+                const credenciales = JSON.parse(localStorage.getItem('conafe_credenciales'));
+                if (credenciales) {
+                    document.getElementById('email').value = credenciales.email || '';
+                    document.getElementById('password').value = credenciales.password || '';
+                    document.getElementById('tipoUsuario').value = credenciales.tipoUsuario || 'responsable';
+                    document.getElementById('rememberMe').checked = true;
+                }
+            } catch (error) {
+                console.error('Error cargando credenciales:', error);
+            }
+        }
+
+        function guardarCredenciales(email, password, tipoUsuario) {
+            const credenciales = {
+                email: email,
+                password: password,
+                tipoUsuario: tipoUsuario,
+                fecha: new Date().toISOString()
+            };
+            
+            localStorage.setItem('conafe_credenciales', JSON.stringify(credenciales));
+        }
+
+        function cargarCredenciales(tipo) {
+            let email, password, rol;
+            
+            switch(tipo) {
+                case 'responsable':
+                    email = 'responsable@conafe.edu.mx';
+                    password = 'conafe2024';
+                    rol = 'responsable';
+                    break;
+                case 'maestro':
+                    email = 'maestro@conafe.edu.mx';
+                    password = 'conafe2024';
+                    rol = 'maestro';
+                    break;
+                case 'admin':
+                    email = 'admin@conafe.edu.mx';
+                    password = 'conafe2024';
+                    rol = 'admin';
+                    break;
+            }
+            
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+            document.getElementById('tipoUsuario').value = rol;
+            document.getElementById('rememberMe').checked = true;
+            
+            mostrarAlerta(`Credenciales de ${tipo} cargadas`, 'info');
+            
+            // Enfocar el botón de login
+            setTimeout(() => {
+                document.getElementById('btnLogin').focus();
+            }, 100);
+        }
+
+        async function iniciarSesion(email, password, tipoUsuario) {
+            try {
+                // Deshabilitar botón durante login
+                const btnLogin = document.getElementById('btnLogin');
+                const originalText = btnLogin.innerHTML;
+                btnLogin.innerHTML = '<span class="loading-spinner"></span> Conectando...';
+                btnLogin.disabled = true;
+                
+                // Verificar conexión
+                if (!isOnline) {
+                    mostrarAlerta('Sin conexión a internet', 'warning');
+                    btnLogin.innerHTML = originalText;
+                    btnLogin.disabled = false;
+                    return;
+                }
+                
+                // Usar la función de autenticación simple
+                const resultado = await conafeConfig.autenticarUsuario(email, password, tipoUsuario);
+                
+                if (resultado.success) {
+                    // Guardar sesión
+                    conafeConfig.guardarSesion(resultado.usuario);
+                    
+                    // Mostrar mensaje de éxito
+                    mostrarAlerta(`Bienvenido ${resultado.usuario.nombre}`, 'success');
+                    
+                    // Pequeña pausa antes de redirigir
+                    setTimeout(() => {
+                        redirigirSegunRol(resultado.usuario);
+                    }, 1000);
+                    
+                } else {
+                    mostrarAlerta(resultado.message, 'danger');
+                    btnLogin.innerHTML = originalText;
+                    btnLogin.disabled = false;
+                    
+                    // Efecto de vibración en móvil
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                
+                let mensaje = 'Error en el sistema de autenticación';
+                if (error.message.includes('Failed to fetch')) {
+                    mensaje = 'Error de conexión. Verifica tu internet.';
+                }
+                
+                mostrarAlerta(mensaje, 'danger');
+                
+                // Rehabilitar botón
+                const btnLogin = document.getElementById('btnLogin');
+                btnLogin.innerHTML = originalText;
+                btnLogin.disabled = false;
+                
+                // Efecto de vibración en móvil
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }
+        }
+
+        function redirigirSegunRol(usuario) {
+            // Animación de salida
+            document.querySelector('.login-card').style.transform = 'translateY(20px)';
+            document.querySelector('.login-card').style.opacity = '0';
+            
+            setTimeout(() => {
+                switch(usuario.rol) {
+                    case 'admin':
+                    case 'responsable':
+                        window.location.href = 'dashboard.html';
+                        break;
+                    case 'maestro':
+                        window.location.href = 'dashboard.html';
+                        break;
+                    default:
+                        window.location.href = 'dashboard.html';
+                }
+            }, 300);
+        }
+
+        function mostrarModalRecuperar() {
+            // Crear modal simple
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 20px;
+                    padding: 25px;
+                    width: 100%;
+                    max-width: 400px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+                ">
+                    <h3 style="margin-top: 0; color: var(--conafe-azul-oscuro);">
+                        <i class="fas fa-key me-2"></i>Recuperar Contraseña
+                    </h3>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Ingresa tu correo electrónico para recibir instrucciones de recuperación.
+                    </p>
+                    <div style="margin-bottom: 20px;">
+                        <input type="email" id="recoveryEmail" 
+                               placeholder="tu@correo.conafe.edu.mx" 
+                               style="width: 100%; padding: 15px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 1rem;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" 
+                                style="flex: 1; padding: 15px; border: 2px solid #e0e6ed; background: white; border-radius: 10px; font-weight: 500; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button onclick="enviarRecuperacion()" 
+                                style="flex: 1; padding: 15px; border: none; background: var(--conafe-azul); color: white; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                            Enviar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Enfocar el input
+            setTimeout(() => {
+                document.getElementById('recoveryEmail').focus();
+            }, 100);
+        }
+
+        function enviarRecuperacion() {
+            const email = document.getElementById('recoveryEmail').value.trim();
+            
+            if (!email) {
+                mostrarAlerta('Ingresa tu correo electrónico', 'warning');
+                return;
+            }
+            
+            // Cerrar modal
+            document.querySelector('div[style*="position: fixed"]').remove();
+            
+            // Mostrar mensaje
+            mostrarAlerta(
+                `Se ha enviado un correo de recuperación a ${email}. Contacta al administrador si no lo recibes.`, 
+                'info'
+            );
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            const container = document.getElementById('alertContainer');
+            
+            // Limpiar alertas anteriores
+            container.innerHTML = '';
+            
+            const alerta = document.createElement('div');
+            alerta.className = `alert-mobile alert-${tipo}`;
+            
+            const iconos = {
+                success: 'fas fa-check-circle',
+                danger: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            alerta.innerHTML = `
+                <i class="${iconos[tipo]}" style="font-size: 1.2rem;"></i>
+                <div style="flex: 1;">${mensaje}</div>
+                <button onclick="this.parentElement.remove()" style="
+                    background: none;
+                    border: none;
+                    color: inherit;
+                    cursor: pointer;
+                    padding: 5px;
+                ">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(alerta);
+            
+            // Auto-eliminar después de 5 segundos
+            setTimeout(() => {
+                if (alerta.parentNode) {
+                    alerta.style.opacity = '0';
+                    setTimeout(() => alerta.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function monitorearConexion() {
+            const statusElement = document.getElementById('connectionStatus');
+            
+            function actualizarEstado() {
+                isOnline = navigator.onLine;
+                
+                if (isOnline) {
+                    statusElement.className = 'connection-status online';
+                    statusElement.innerHTML = '<i class="fas fa-wifi"></i>';
+                    statusElement.setAttribute('title', 'Conectado');
+                } else {
+                    statusElement.className = 'connection-status offline';
+                    statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i>';
+                    statusElement.setAttribute('title', 'Sin conexión');
+                    
+                    mostrarAlerta('Sin conexión a internet', 'warning');
+                }
+            }
+            
+            // Estado inicial
+            actualizarEstado();
+            
+            // Escuchar cambios
+            window.addEventListener('online', actualizarEstado);
+            window.addEventListener('offline', actualizarEstado);
+            
+            // Verificar conexión Firebase periódicamente
+            setInterval(async () => {
+                try {
+                    await conafeConfig.db.usuarios.limitToFirst(1).once('value');
+                    statusElement.className = 'connection-status online';
+                    statusElement.innerHTML = '<i class="fas fa-database"></i>';
+                    statusElement.setAttribute('title', 'Base de datos conectada');
+                } catch (error) {
+                    statusElement.className = 'connection-status offline';
+                    statusElement.innerHTML = '<i class="fas fa-database"></i>';
+                    statusElement.setAttribute('title', 'Error de conexión a BD');
+                }
+            }, 30000);
+        }
+
+        // Exportar funciones para los botones
+        window.cargarCredenciales = cargarCredenciales;
+        window.enviarRecuperacion = enviarRecuperacion;
+    </script>
+</body>
+</html>
