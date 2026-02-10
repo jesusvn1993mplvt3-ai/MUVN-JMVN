@@ -1,4 +1,4 @@
-// config.js - Firebase Realtime Database Configuration
+// config.js - Configuración Firebase Realtime Database
 const firebaseConfig = {
     apiKey: "AIzaSyD03j-v-L3pckYW-GC2YfmKI3E08i1atx0",
     authDomain: "conafe-muvn.firebaseapp.com",
@@ -21,7 +21,18 @@ const db = {
     usuarios: database.ref('usuarios'),
     comunidades: database.ref('comunidades'),
     asistencias: database.ref('asistencias'),
-    actividades: database.ref('actividades')
+    actividades: database.ref('actividades'),
+    configuracion: database.ref('configuracion')
+};
+
+// Colores CONAFE
+const coloresCONAFE = {
+    primario: '#0066cc',      // Azul CONAFE
+    secundario: '#004d99',    // Azul oscuro
+    verde: '#28a745',         // Verde
+    amarillo: '#ffc107',      // Amarillo
+    naranja: '#fd7e14',       // Naranja
+    rojo: '#dc3545'           // Rojo
 };
 
 // Función para generar ID único
@@ -61,10 +72,26 @@ function mostrarAlerta(mensaje, tipo = 'info', duracion = 5000) {
     
     // Estilos por tipo
     const estilos = {
-        success: { background: '#d4edda', color: '#155724', borderLeft: '4px solid #28a745' },
-        danger: { background: '#f8d7da', color: '#721c24', borderLeft: '4px solid #dc3545' },
-        warning: { background: '#fff3cd', color: '#856404', borderLeft: '4px solid #ffc107' },
-        info: { background: '#d1ecf1', color: '#0c5460', borderLeft: '4px solid #17a2b8' }
+        success: { 
+            background: '#d4edda', 
+            color: '#155724', 
+            borderLeft: `4px solid ${coloresCONAFE.verde}` 
+        },
+        danger: { 
+            background: '#f8d7da', 
+            color: '#721c24', 
+            borderLeft: `4px solid ${coloresCONAFE.rojo}` 
+        },
+        warning: { 
+            background: '#fff3cd', 
+            color: '#856404', 
+            borderLeft: `4px solid ${coloresCONAFE.amarillo}` 
+        },
+        info: { 
+            background: '#d1ecf1', 
+            color: '#0c5460', 
+            borderLeft: `4px solid ${coloresCONAFE.primario}` 
+        }
     };
     
     Object.assign(alert.style, estilos[tipo]);
@@ -138,7 +165,7 @@ function formatearFechaCorta(fechaISO) {
     return fecha.toLocaleDateString('es-MX');
 }
 
-// Función para guardar en localStorage (sesión)
+// Función para guardar sesión
 function guardarSesion(usuario) {
     // No guardar contraseña por seguridad
     const { password, password_temporal, ...usuarioSeguro } = usuario;
@@ -147,7 +174,8 @@ function guardarSesion(usuario) {
 
 // Función para obtener sesión
 function obtenerSesion() {
-    return JSON.parse(localStorage.getItem('usuarioConectado'));
+    const sesion = localStorage.getItem('usuarioConectado');
+    return sesion ? JSON.parse(sesion) : null;
 }
 
 // Función para cerrar sesión
@@ -165,7 +193,9 @@ function cerrarSesion() {
 // Verificar autenticación en páginas protegidas
 function verificarAutenticacion() {
     const usuario = obtenerSesion();
-    const paginasProtegidas = ['dashboard', 'admin', 'comunidades', 'registro-movil', 'detalles-comunidad'];
+    const paginasProtegidas = ['dashboard', 'admin', 'comunidades', 'registro-movil', 
+                               'detalles-comunidad', 'usuarios', 'asistencias', 
+                               'actividades', 'reportes', 'configuracion'];
     const rutaActual = window.location.pathname;
     
     if (paginasProtegidas.some(pagina => rutaActual.includes(pagina))) {
@@ -177,9 +207,66 @@ function verificarAutenticacion() {
     return usuario;
 }
 
+// Función para generar contraseña
+function generarPassword() {
+    const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+        password += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return password;
+}
+
+// Inicializar datos por defecto si no existen
+async function inicializarDatosPorDefecto() {
+    try {
+        // Verificar si existe algún usuario
+        const usuariosSnapshot = await db.usuarios.limitToFirst(1).once('value');
+        
+        if (!usuariosSnapshot.exists()) {
+            // Crear usuario administrador por defecto
+            const adminId = generarId();
+            const adminData = {
+                id: adminId,
+                nombre: 'Administrador CONAFE',
+                email: 'admin@conafe.edu.mx',
+                telefono: '1234567890',
+                rol: 'admin',
+                activo: true,
+                creado_en: firebase.database.ServerValue.TIMESTAMP,
+                actualizado_en: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            await db.usuarios.child(adminId).set(adminData);
+            
+            // Crear comunidad de ejemplo
+            const comunidadId = generarId();
+            const comunidadData = {
+                id: comunidadId,
+                nombre: 'San Juan de la Montaña',
+                municipio: 'Yuriria',
+                tipo: 'rural',
+                poblacion: 1200,
+                activa: true,
+                escuelas: ['Primaria "Benito Juárez"', 'Telesecundaria 456'],
+                creado_en: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            await db.comunidades.child(comunidadId).set(comunidadData);
+            
+            console.log('Datos iniciales creados');
+        }
+    } catch (error) {
+        console.error('Error inicializando datos:', error);
+    }
+}
+
 // Inicializar al cargar
 document.addEventListener('DOMContentLoaded', function() {
-    verificarAutenticacion();
+    // Solo inicializar datos si estamos en index.html
+    if (window.location.pathname.includes('index.html')) {
+        inicializarDatosPorDefecto();
+    }
 });
 
 // Exportar al scope global
@@ -187,6 +274,7 @@ window.conafeConfig = {
     database,
     db,
     auth,
+    coloresCONAFE,
     generarId,
     mostrarAlerta,
     formatearFecha,
@@ -194,5 +282,6 @@ window.conafeConfig = {
     guardarSesion,
     obtenerSesion,
     cerrarSesion,
-    verificarAutenticacion
+    verificarAutenticacion,
+    generarPassword
 };
