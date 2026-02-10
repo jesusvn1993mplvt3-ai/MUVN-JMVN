@@ -163,6 +163,12 @@
             transform: translateY(0);
         }
         
+        .btn-conafe:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
         .login-footer {
             text-align: center;
             margin-top: 30px;
@@ -227,6 +233,22 @@
             max-width: 400px;
         }
         
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--conafe-azul);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* Responsive */
         @media (max-width: 992px) {
             .features {
@@ -250,6 +272,34 @@
             .login-title {
                 font-size: 1.5rem;
             }
+        }
+        
+        .credenciales-demo {
+            background: #f8f9fa;
+            border-left: 4px solid var(--conafe-azul);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .credenciales-demo h6 {
+            color: var(--conafe-azul-oscuro);
+            margin-bottom: 10px;
+        }
+        
+        .credenciales-demo table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+        
+        .credenciales-demo td {
+            padding: 5px 0;
+        }
+        
+        .credenciales-demo .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
         }
     </style>
 </head>
@@ -316,6 +366,40 @@
                             <p>Interfaz optimizada para dispositivos móviles en campo</p>
                         </div>
                     </div>
+                    
+                    <!-- Credenciales de demostración -->
+                    <div class="credenciales-demo">
+                        <h6><i class="fas fa-key me-2"></i>Credenciales de Demostración</h6>
+                        <table>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>responsable@conafe.edu.mx</td>
+                                <td><span class="badge bg-warning">Responsable</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contraseña:</strong></td>
+                                <td colspan="2">conafe2024</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>maestro@conafe.edu.mx</td>
+                                <td><span class="badge bg-primary">Maestro</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contraseña:</strong></td>
+                                <td colspan="2">conafe2024</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>admin@conafe.edu.mx</td>
+                                <td><span class="badge bg-danger">Admin</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contraseña:</strong></td>
+                                <td colspan="2">conafe2024</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
             
@@ -331,7 +415,8 @@
                                     <i class="fas fa-envelope"></i>
                                 </span>
                                 <input type="email" class="form-control" id="email" 
-                                       placeholder="usuario@conafe.edu.mx" required>
+                                       placeholder="usuario@conafe.edu.mx" required
+                                       value="responsable@conafe.edu.mx">
                             </div>
                         </div>
                         
@@ -342,15 +427,16 @@
                                     <i class="fas fa-lock"></i>
                                 </span>
                                 <input type="password" class="form-control" id="password" 
-                                       placeholder="Ingresa tu contraseña" required>
+                                       placeholder="Ingresa tu contraseña" required
+                                       value="conafe2024">
                             </div>
                         </div>
                         
                         <div class="mb-4">
                             <label for="tipoUsuario" class="form-label">Tipo de Usuario</label>
                             <select class="form-select" id="tipoUsuario" required>
-                                <option value="" disabled selected>Selecciona tu tipo de usuario</option>
-                                <option value="responsable">Responsable / Supervisor</option>
+                                <option value="" disabled>Selecciona tu tipo de usuario</option>
+                                <option value="responsable" selected>Responsable / Supervisor</option>
                                 <option value="maestro">Maestro / Instructor</option>
                                 <option value="admin">Administrador</option>
                             </select>
@@ -376,10 +462,6 @@
     <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Configuración -->
     <script src="config.js"></script>
@@ -418,10 +500,7 @@
             if (btnRecuperar) {
                 btnRecuperar.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const email = prompt('Ingresa tu correo electrónico para recuperar contraseña:');
-                    if (email) {
-                        recuperarContrasena(email);
-                    }
+                    mostrarModalRecuperar();
                 });
             }
         });
@@ -431,81 +510,36 @@
                 // Deshabilitar botón durante login
                 const btnLogin = document.getElementById('btnLogin');
                 const originalText = btnLogin.innerHTML;
-                btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Iniciando sesión...';
+                btnLogin.innerHTML = '<span class="loading-spinner"></span> Iniciando sesión...';
                 btnLogin.disabled = true;
                 
-                // Intentar autenticar con Firebase Auth
-                const credenciales = await auth.signInWithEmailAndPassword(email, password);
-                const user = credenciales.user;
+                // Usar la función de autenticación simple
+                const resultado = await conafeConfig.autenticarUsuario(email, password, tipoUsuario);
                 
-                // Buscar usuario en la base de datos
-                const snapshot = await conafeConfig.db.usuarios.orderByChild('email').equalTo(email).once('value');
-                
-                if (!snapshot.exists()) {
-                    conafeConfig.mostrarAlerta('Usuario no encontrado en el sistema', 'danger');
-                    await auth.signOut();
-                    return;
-                }
-                
-                // Obtener datos del usuario
-                let usuarioData = null;
-                snapshot.forEach(childSnapshot => {
-                    usuarioData = childSnapshot.val();
-                    usuarioData.id = childSnapshot.key;
-                });
-                
-                // Verificar rol
-                if (usuarioData.rol !== tipoUsuario) {
-                    conafeConfig.mostrarAlerta(`Este usuario no es un ${tipoUsuario === 'maestro' ? 'maestro' : 'responsable'}`, 'warning');
-                    await auth.signOut();
-                    return;
-                }
-                
-                // Verificar si está activo
-                if (usuarioData.activo === false) {
-                    conafeConfig.mostrarAlerta('Usuario inactivo. Contacta al administrador.', 'danger');
-                    await auth.signOut();
-                    return;
-                }
-                
-                // Guardar sesión
-                conafeConfig.guardarSesion(usuarioData);
-                
-                // Redirigir según rol
-                redirigirSegunRol(usuarioData);
-                
-            } catch (error) {
-                console.error('Error en login:', error);
-                let mensaje = 'Error en la autenticación';
-                
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                        mensaje = 'Usuario no encontrado';
-                        break;
-                    case 'auth/wrong-password':
-                        mensaje = 'Contraseña incorrecta';
-                        break;
-                    case 'auth/invalid-email':
-                        mensaje = 'Email inválido';
-                        break;
-                    case 'auth/user-disabled':
-                        mensaje = 'Usuario deshabilitado';
-                        break;
-                    case 'auth/too-many-requests':
-                        mensaje = 'Demasiados intentos. Intenta más tarde.';
-                        break;
-                    default:
-                        mensaje = 'Error desconocido. Intenta nuevamente.';
-                }
-                
-                conafeConfig.mostrarAlerta(mensaje, 'danger');
-            } finally {
-                // Rehabilitar botón
-                const btnLogin = document.getElementById('btnLogin');
-                if (btnLogin) {
+                if (resultado.success) {
+                    // Guardar sesión
+                    conafeConfig.guardarSesion(resultado.usuario);
+                    
+                    // Redirigir según rol
+                    redirigirSegunRol(resultado.usuario);
+                    
+                    // Mostrar mensaje de bienvenida
+                    conafeConfig.mostrarAlerta(`Bienvenido ${resultado.usuario.nombre}`, 'success');
+                    
+                } else {
+                    conafeConfig.mostrarAlerta(resultado.message, 'danger');
                     btnLogin.innerHTML = originalText;
                     btnLogin.disabled = false;
                 }
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                conafeConfig.mostrarAlerta('Error en el sistema de autenticación', 'danger');
+                
+                // Rehabilitar botón
+                const btnLogin = document.getElementById('btnLogin');
+                btnLogin.innerHTML = originalText;
+                btnLogin.disabled = false;
             }
         }
 
@@ -516,20 +550,20 @@
                     window.location.href = 'dashboard.html';
                     break;
                 case 'maestro':
-                    window.location.href = 'panel-maestro.html';
+                    window.location.href = 'dashboard.html'; // También va al dashboard
                     break;
                 default:
                     window.location.href = 'dashboard.html';
             }
         }
 
-        async function recuperarContrasena(email) {
-            try {
-                await auth.sendPasswordResetEmail(email);
-                conafeConfig.mostrarAlerta('Se ha enviado un correo para restablecer tu contraseña', 'success');
-            } catch (error) {
-                console.error('Error recuperando contraseña:', error);
-                conafeConfig.mostrarAlerta('Error al enviar correo de recuperación', 'danger');
+        function mostrarModalRecuperar() {
+            const email = prompt('Ingresa tu correo electrónico para recuperar contraseña:');
+            if (email) {
+                conafeConfig.mostrarAlerta(
+                    'Se ha enviado una solicitud de recuperación. Contacta al administrador.', 
+                    'info'
+                );
             }
         }
     </script>
