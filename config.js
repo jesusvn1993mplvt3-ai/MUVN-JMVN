@@ -1,4 +1,4 @@
-// config.js - Configuración Firebase Realtime Database
+// config.js - Configuración Firebase Realtime Database (sin Auth)
 const firebaseConfig = {
     apiKey: "AIzaSyD03j-v-L3pckYW-GC2YfmKI3E08i1atx0",
     authDomain: "conafe-muvn.firebaseapp.com",
@@ -9,12 +9,11 @@ const firebaseConfig = {
     appId: "1:149350241710:web:59a48078b4f1c4fa33643f"
 };
 
-// Inicializar Firebase
+// Inicializar Firebase sin Auth
 firebase.initializeApp(firebaseConfig);
 
 // Obtener referencias
 const database = firebase.database();
-const auth = firebase.auth();
 
 // Referencias principales
 const db = {
@@ -27,12 +26,12 @@ const db = {
 
 // Colores CONAFE
 const coloresCONAFE = {
-    primario: '#0066cc',      // Azul CONAFE
-    secundario: '#004d99',    // Azul oscuro
-    verde: '#28a745',         // Verde
-    amarillo: '#ffc107',      // Amarillo
-    naranja: '#fd7e14',       // Naranja
-    rojo: '#dc3545'           // Rojo
+    primario: '#0066cc',
+    secundario: '#004d99',
+    verde: '#28a745',
+    amarillo: '#ffc107',
+    naranja: '#fd7e14',
+    rojo: '#dc3545'
 };
 
 // Función para generar ID único
@@ -75,22 +74,22 @@ function mostrarAlerta(mensaje, tipo = 'info', duracion = 5000) {
         success: { 
             background: '#d4edda', 
             color: '#155724', 
-            borderLeft: `4px solid ${coloresCONAFE.verde}` 
+            borderLeft: '4px solid #28a745' 
         },
         danger: { 
             background: '#f8d7da', 
             color: '#721c24', 
-            borderLeft: `4px solid ${coloresCONAFE.rojo}` 
+            borderLeft: '4px solid #dc3545' 
         },
         warning: { 
             background: '#fff3cd', 
             color: '#856404', 
-            borderLeft: `4px solid ${coloresCONAFE.amarillo}` 
+            borderLeft: '4px solid #ffc107' 
         },
         info: { 
             background: '#d1ecf1', 
             color: '#0c5460', 
-            borderLeft: `4px solid ${coloresCONAFE.primario}` 
+            borderLeft: '4px solid #17a2b8' 
         }
     };
     
@@ -168,7 +167,7 @@ function formatearFechaCorta(fechaISO) {
 // Función para guardar sesión
 function guardarSesion(usuario) {
     // No guardar contraseña por seguridad
-    const { password, password_temporal, ...usuarioSeguro } = usuario;
+    const { password, ...usuarioSeguro } = usuario;
     localStorage.setItem('usuarioConectado', JSON.stringify(usuarioSeguro));
 }
 
@@ -180,14 +179,8 @@ function obtenerSesion() {
 
 // Función para cerrar sesión
 function cerrarSesion() {
-    auth.signOut().then(() => {
-        localStorage.removeItem('usuarioConectado');
-        window.location.href = 'index.html';
-    }).catch(error => {
-        console.error('Error cerrando sesión:', error);
-        localStorage.removeItem('usuarioConectado');
-        window.location.href = 'index.html';
-    });
+    localStorage.removeItem('usuarioConectado');
+    window.location.href = 'index.html';
 }
 
 // Verificar autenticación en páginas protegidas
@@ -195,15 +188,20 @@ function verificarAutenticacion() {
     const usuario = obtenerSesion();
     const paginasProtegidas = ['dashboard', 'admin', 'comunidades', 'registro-movil', 
                                'detalles-comunidad', 'usuarios', 'asistencias', 
-                               'actividades', 'reportes', 'configuracion'];
+                               'actividades', 'reportes', 'configuracion', 'asistencia'];
     const rutaActual = window.location.pathname;
     
-    if (paginasProtegidas.some(pagina => rutaActual.includes(pagina))) {
-        if (!usuario) {
-            window.location.href = 'index.html';
-            return false;
-        }
+    // Verificar si estamos en una página protegida
+    const esPaginaProtegida = paginasProtegidas.some(pagina => 
+        rutaActual.includes(pagina) || 
+        rutaActual.includes(`${pagina}.html`)
+    );
+    
+    if (esPaginaProtegida && !usuario) {
+        window.location.href = 'index.html';
+        return false;
     }
+    
     return usuario;
 }
 
@@ -224,6 +222,8 @@ async function inicializarDatosPorDefecto() {
         const usuariosSnapshot = await db.usuarios.limitToFirst(1).once('value');
         
         if (!usuariosSnapshot.exists()) {
+            console.log('Creando datos iniciales...');
+            
             // Crear usuario administrador por defecto
             const adminId = generarId();
             const adminData = {
@@ -232,12 +232,45 @@ async function inicializarDatosPorDefecto() {
                 email: 'admin@conafe.edu.mx',
                 telefono: '1234567890',
                 rol: 'admin',
+                password: 'conafe2024', // Contraseña simple para desarrollo
                 activo: true,
-                creado_en: firebase.database.ServerValue.TIMESTAMP,
-                actualizado_en: firebase.database.ServerValue.TIMESTAMP
+                creado_en: new Date().toISOString(),
+                actualizado_en: new Date().toISOString()
             };
             
             await db.usuarios.child(adminId).set(adminData);
+            
+            // Crear usuario responsable
+            const responsableId = generarId();
+            const responsableData = {
+                id: responsableId,
+                nombre: 'Responsable CONAFE',
+                email: 'responsable@conafe.edu.mx',
+                telefono: '0987654321',
+                rol: 'responsable',
+                password: 'conafe2024',
+                activo: true,
+                creado_en: new Date().toISOString(),
+                actualizado_en: new Date().toISOString()
+            };
+            
+            await db.usuarios.child(responsableId).set(responsableData);
+            
+            // Crear usuario maestro
+            const maestroId = generarId();
+            const maestroData = {
+                id: maestroId,
+                nombre: 'Maestro Ejemplo',
+                email: 'maestro@conafe.edu.mx',
+                telefono: '1122334455',
+                rol: 'maestro',
+                password: 'conafe2024',
+                activo: true,
+                creado_en: new Date().toISOString(),
+                actualizado_en: new Date().toISOString()
+            };
+            
+            await db.usuarios.child(maestroId).set(maestroData);
             
             // Crear comunidad de ejemplo
             const comunidadId = generarId();
@@ -249,31 +282,92 @@ async function inicializarDatosPorDefecto() {
                 poblacion: 1200,
                 activa: true,
                 escuelas: ['Primaria "Benito Juárez"', 'Telesecundaria 456'],
-                creado_en: firebase.database.ServerValue.TIMESTAMP
+                creado_en: new Date().toISOString()
             };
             
             await db.comunidades.child(comunidadId).set(comunidadData);
             
-            console.log('Datos iniciales creados');
+            // Asignar comunidad al maestro
+            await db.usuarios.child(maestroId).update({
+                comunidad_id: comunidadId,
+                comunidad_nombre: comunidadData.nombre
+            });
+            
+            console.log('Datos iniciales creados exitosamente');
+            mostrarAlerta('Base de datos inicializada con datos de ejemplo', 'success');
         }
     } catch (error) {
         console.error('Error inicializando datos:', error);
+        mostrarAlerta('Error inicializando datos: ' + error.message, 'danger');
     }
 }
 
 // Inicializar al cargar
 document.addEventListener('DOMContentLoaded', function() {
     // Solo inicializar datos si estamos en index.html
-    if (window.location.pathname.includes('index.html')) {
+    if (window.location.pathname.includes('index.html') || 
+        window.location.pathname.endsWith('/')) {
         inicializarDatosPorDefecto();
     }
+    
+    // Verificar autenticación en páginas protegidas
+    if (!window.location.pathname.includes('index.html') && 
+        !window.location.pathname.endsWith('/')) {
+        setTimeout(() => verificarAutenticacion(), 100);
+    }
 });
+
+// Sistema de autenticación simple
+async function autenticarUsuario(email, password, tipoUsuario) {
+    try {
+        // Buscar usuario por email
+        const snapshot = await db.usuarios
+            .orderByChild('email')
+            .equalTo(email.toLowerCase())
+            .once('value');
+        
+        if (!snapshot.exists()) {
+            return { success: false, message: 'Usuario no encontrado' };
+        }
+        
+        // Obtener usuario
+        let usuario = null;
+        snapshot.forEach(childSnapshot => {
+            usuario = childSnapshot.val();
+            usuario.id = childSnapshot.key;
+        });
+        
+        // Verificar contraseña
+        if (usuario.password !== password) {
+            return { success: false, message: 'Contraseña incorrecta' };
+        }
+        
+        // Verificar rol
+        if (tipoUsuario && usuario.rol !== tipoUsuario) {
+            return { 
+                success: false, 
+                message: `Este usuario no es un ${tipoUsuario === 'maestro' ? 'maestro' : 'responsable'}` 
+            };
+        }
+        
+        // Verificar si está activo
+        if (usuario.activo === false) {
+            return { success: false, message: 'Usuario inactivo. Contacta al administrador.' };
+        }
+        
+        // Éxito
+        return { success: true, usuario: usuario };
+        
+    } catch (error) {
+        console.error('Error en autenticación:', error);
+        return { success: false, message: 'Error en el sistema de autenticación' };
+    }
+}
 
 // Exportar al scope global
 window.conafeConfig = {
     database,
     db,
-    auth,
     coloresCONAFE,
     generarId,
     mostrarAlerta,
@@ -283,5 +377,6 @@ window.conafeConfig = {
     obtenerSesion,
     cerrarSesion,
     verificarAutenticacion,
-    generarPassword
+    generarPassword,
+    autenticarUsuario
 };
