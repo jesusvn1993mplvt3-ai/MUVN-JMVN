@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONAFE - Panel de Control</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #004d99;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-brand {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-brand h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-brand small {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .user-info {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-info h5 {
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .user-info p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .user-role {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 5px;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: white;
+        }
+        
+        .nav-link i {
+            width: 25px;
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .badge-nav {
+            margin-left: auto;
+            background: var(--warning-color);
+            color: var(--dark-color);
+            font-size: 0.7rem;
+            padding: 3px 8px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .page-title p {
+            color: #666;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-action {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn-action:hover {
+            background: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,102,204,0.2);
+        }
+        
+        .btn-action.secondary {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .btn-action.secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .stat-card.danger {
+            border-left-color: var(--danger-color);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: rgba(0,102,204,0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-card.warning .stat-icon {
+            background: rgba(255,193,7,0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card.success .stat-icon {
+            background: rgba(40,167,69,0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card.danger .stat-icon {
+            background: rgba(220,53,69,0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-trend {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .trend-up {
+            color: var(--success-color);
+        }
+        
+        .trend-down {
+            color: var(--danger-color);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        /* Charts and Activities */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        
+        .card-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Activities List */
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s;
+        }
+        
+        .activity-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(0,102,204,0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .activity-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .activity-time {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .activity-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-pending {
+            background: rgba(255,193,7,0.1);
+            color: var(--warning-color);
+        }
+        
+        .badge-completed {
+            background: rgba(40,167,69,0.1);
+            color: var(--success-color);
+        }
+        
+        /* Recent Registrations */
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,102,204,0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .user-info-small h5 {
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+        
+        .user-info-small p {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0;
+        }
+        
+        /* Map Container */
+        .map-container {
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                overflow: visible;
+            }
+            
+            .sidebar .nav-text,
+            .sidebar-brand h3,
+            .sidebar-brand small,
+            .user-info h5,
+            .user-info p,
+            .user-role {
+                display: none;
+            }
+            
+            .sidebar-brand {
+                padding: 15px 0;
+            }
+            
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .nav-link {
+                padding: 15px;
+                justify-content: center;
+            }
+            
+            .nav-link i {
+                margin: 0;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .quick-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn-action {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h3>CONAFE</h3>
+            <small>Sistema de Gestión Escolar</small>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h5 id="userName">Cargando...</h5>
+            <p id="userEmail">usuario@conafe.edu.mx</p>
+            <div class="user-role" id="userRole">Responsable</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="comunidades.html" class="nav-link">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="nav-text">Comunidades</span>
+                    <span class="badge-nav" id="badgeComunidades">0</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="usuarios.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">Usuarios</span>
+                    <span class="badge-nav" id="badgeUsuarios">0</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="registro-movil.html" class="nav-link">
+                    <i class="fas fa-user-plus"></i>
+                    <span class="nav-text">Registro Móvil</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="asistencias.html" class="nav-link">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span class="nav-text">Asistencias</span>
+                    <span class="badge-nav" id="badgeAsistencias">0</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="actividades.html" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    <span class="nav-text">Actividades</span>
+                    <span class="badge-nav" id="badgeActividades">0</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="reportes.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="nav-text">Reportes</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="configuracion.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="#" class="nav-link" id="btnCerrarSesion">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-text">Cerrar Sesión</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Panel de Control</h1>
+                <p id="currentDate">Cargando fecha...</p>
+            </div>
+            
+            <div class="quick-actions">
+                <a href="registro-movil.html" class="btn-action">
+                    <i class="fas fa-user-plus"></i>
+                    Registrar Usuario
+                </a>
+                <a href="comunidades.html" class="btn-action secondary">
+                    <i class="fas fa-plus"></i>
+                    Nueva Comunidad
+                </a>
+                <button class="btn-action secondary" onclick="exportarReporte()">
+                    <i class="fas fa-download"></i>
+                    Exportar
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 12%
+                    </div>
+                </div>
+                <div class="stat-number" id="totalComunidades">0</div>
+                <div class="stat-label">Comunidades Activas</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 8%
+                    </div>
+                </div>
+                <div class="stat-number" id="totalUsuarios">0</div>
+                <div class="stat-label">Usuarios Registrados</div>
+            </div>
+            
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 15%
+                    </div>
+                </div>
+                <div class="stat-number" id="asistenciasHoy">0</div>
+                <div class="stat-label">Asistencias Hoy</div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-trend trend-down">
+                        <i class="fas fa-arrow-down"></i> 3%
+                    </div>
+                </div>
+                <div class="stat-number" id="pendientes">0</div>
+                <div class="stat-label">Actividades Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Recent Activities -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Actividades Recientes</h3>
+                        <a href="actividades.html" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                    </div>
+                    <div class="card-body">
+                        <div id="actividadesList">
+                            <div class="empty-state">
+                                <i class="fas fa-tasks"></i>
+                                <h4>No hay actividades recientes</h4>
+                                <p>Las actividades aparecerán aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Asistencias -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Asistencias Recientes</h3>
+                        <a href="asistencias.html" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush" id="asistenciasRecientes">
+                            <div class="empty-state">
+                                <i class="fas fa-clipboard-check"></i>
+                                <h4>No hay asistencias recientes</h4>
+                                <p>Los registros de asistencia aparecerán aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Quick Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Estadísticas Rápidas</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Maestros Activos</span>
+                                <strong id="maestrosActivos">0</strong>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Comunidades con GPS</span>
+                                <strong id="comunidadesGPS">0</strong>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Asistencias este mes</span>
+                                <strong id="asistenciasMes">0</strong>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Reportes generados</span>
+                                <strong id="reportesGenerados">0</strong>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" style="width: 30%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Registrations -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Registros Recientes</h3>
+                        <a href="usuarios.html" class="btn btn-sm btn-outline-primary">Ver todos</a>
+                    </div>
+                    <div class="card-body">
+                        <div id="registrosRecientes">
+                            <div class="empty-state">
+                                <i class="fas fa-user-plus"></i>
+                                <h4>No hay registros recientes</h4>
+                                <p>Los nuevos usuarios aparecerán aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Accesos Rápidos</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="registro-movil.html" class="btn btn-outline-primary w-100 mb-2">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    Registro Móvil
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="reportes.html" class="btn btn-outline-success w-100 mb-2">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Reportes
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="comunidades.html" class="btn btn-outline-warning w-100 mb-2">
+                                    <i class="fas fa-map me-2"></i>
+                                    Mapa
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="configuracion.html" class="btn btn-outline-info w-100 mb-2">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Configuración
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Sistema CONAFE © 2024 - Versión 1.0</p>
+            <p class="text-muted">Última actualización: <span id="lastUpdate">Cargando...</span></p>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Configuración -->
+    <script src="config.js"></script>
+    
+    <!-- Dashboard JS -->
+    <script>
+        // dashboard.js - Funciones específicas para el dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticación
+            const usuario = conafeConfig.verificarAutenticacion();
+            if (!usuario) return;
+            
+            // Mostrar información del usuario
+            mostrarInfoUsuario(usuario);
+            
+            // Actualizar fecha actual
+            actualizarFecha();
+            
+            // Cargar datos del dashboard según rol
+            if (usuario.rol === 'responsable' || usuario.rol === 'admin') {
+                cargarDashboardResponsable(usuario);
+            } else if (usuario.rol === 'maestro') {
+                cargarDashboardMaestro(usuario);
+            }
+            
+            // Configurar eventos
+            configurarEventosDashboard();
+            
+            // Cargar datos en tiempo real
+            iniciarEscuchadoresRealtime();
+        });
+
+        function mostrarInfoUsuario(usuario) {
+            document.getElementById('userName').textContent = usuario.nombre || 'Usuario';
+            document.getElementById('userEmail').textContent = usuario.email || 'Sin email';
+            
+            let rolTexto = 'Usuario';
+            switch(usuario.rol) {
+                case 'admin': rolTexto = 'Administrador'; break;
+                case 'responsable': rolTexto = 'Responsable'; break;
+                case 'maestro': rolTexto = 'Maestro'; break;
+            }
+            document.getElementById('userRole').textContent = rolTexto;
+            
+            // Cambiar icono según rol
+            const avatarIcon = document.querySelector('.user-avatar i');
+            if (avatarIcon) {
+                if (usuario.rol === 'maestro') {
+                    avatarIcon.className = 'fas fa-user-graduate';
+                } else if (usuario.rol === 'responsable' || usuario.rol === 'admin') {
+                    avatarIcon.className = 'fas fa-user-tie';
+                }
+            }
+        }
+
+        function actualizarFecha() {
+            const ahora = new Date();
+            const opciones = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = 
+                ahora.toLocaleDateString('es-MX', opciones);
+        }
+
+        async function cargarDashboardResponsable(usuario) {
+            try {
+                // Cargar contadores principales
+                const [comunidadesSnapshot, usuariosSnapshot, asistenciasSnapshot] = await Promise.all([
+                    conafeConfig.db.comunidades.once('value'),
+                    conafeConfig.db.usuarios.once('value'),
+                    conafeConfig.db.asistencias.orderByChild('fecha').limitToLast(100).once('value')
+                ]);
+
+                // Actualizar contadores
+                document.getElementById('totalComunidades').textContent = comunidadesSnapshot.numChildren();
+                document.getElementById('totalUsuarios').textContent = usuariosSnapshot.numChildren();
+                
+                // Calcular asistencias hoy
+                const hoy = new Date().toISOString().split('T')[0];
+                let asistenciasHoy = 0;
+                let asistenciasEsteMes = 0;
+                const primerDiaMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                
+                asistenciasSnapshot.forEach(childSnapshot => {
+                    const asistencia = childSnapshot.val();
+                    if (asistencia.fecha && asistencia.fecha.includes(hoy)) {
+                        asistenciasHoy++;
+                    }
+                    if (asistencia.fecha && new Date(asistencia.fecha) >= primerDiaMes) {
+                        asistenciasEsteMes++;
+                    }
+                });
+                
+                document.getElementById('asistenciasHoy').textContent = asistenciasHoy;
+                document.getElementById('asistenciasMes').textContent = asistenciasEsteMes;
+                
+                // Calcular maestros activos
+                let maestrosActivos = 0;
+                usuariosSnapshot.forEach(childSnapshot => {
+                    const usuario = childSnapshot.val();
+                    if (usuario.rol === 'maestro' && usuario.activo !== false) {
+                        maestrosActivos++;
+                    }
+                });
+                document.getElementById('maestrosActivos').textContent = maestrosActivos;
+                
+                // Calcular comunidades con GPS
+                let comunidadesConGPS = 0;
+                comunidadesSnapshot.forEach(childSnapshot => {
+                    const comunidad = childSnapshot.val();
+                    if (comunidad.latitud && comunidad.longitud) {
+                        comunidadesConGPS++;
+                    }
+                });
+                document.getElementById('comunidadesGPS').textContent = comunidadesConGPS;
+                
+                // Cargar actividades pendientes
+                await cargarActividadesPendientes();
+                
+                // Cargar asistencias recientes
+                await cargarAsistenciasRecientes();
+                
+                // Cargar registros recientes
+                await cargarRegistrosRecientes();
+                
+                // Actualizar badges de navegación
+                actualizarBadgesNavegacion(comunidadesSnapshot, usuariosSnapshot, asistenciasSnapshot);
+                
+            } catch (error) {
+                console.error('Error cargando dashboard responsable:', error);
+                conafeConfig.mostrarAlerta('Error al cargar datos del dashboard', 'danger');
+            }
+        }
+
+        async function cargarDashboardMaestro(usuario) {
+            try {
+                // Ocultar elementos no relevantes para maestros
+                document.querySelector('.quick-actions').style.display = 'none';
+                document.getElementById('badgeComunidades').style.display = 'none';
+                document.getElementById('badgeUsuarios').style.display = 'none';
+                
+                // Cargar información específica del maestro
+                if (usuario.comunidad_id) {
+                    const comunidadSnapshot = await conafeConfig.db.comunidades.child(usuario.comunidad_id).once('value');
+                    if (comunidadSnapshot.exists()) {
+                        const comunidad = comunidadSnapshot.val();
+                        document.querySelector('.page-title h1').textContent = `Bienvenido, ${usuario.nombre}`;
+                        document.querySelector('.page-title p').textContent = `Comunidad: ${comunidad.nombre}`;
+                    }
+                }
+                
+                // Cargar asistencias del maestro
+                const asistenciasSnapshot = await conafeConfig.db.asistencias
+                    .orderByChild('usuario_id')
+                    .equalTo(usuario.id)
+                    .limitToLast(10)
+                    .once('value');
+                
+                let asistenciasHoy = 0;
+                const hoy = new Date().toISOString().split('T')[0];
+                
+                asistenciasSnapshot.forEach(childSnapshot => {
+                    const asistencia = childSnapshot.val();
+                    if (asistencia.fecha && asistencia.fecha.includes(hoy)) {
+                        asistenciasHoy++;
+                    }
+                });
+                
+                document.getElementById('asistenciasHoy').textContent = asistenciasHoy;
+                
+                // Actualizar estadísticas para maestro
+                document.getElementById('totalComunidades').textContent = '1';
+                document.getElementById('totalComunidades').parentElement.querySelector('.stat-label').textContent = 'Mi Comunidad';
+                
+                // Cargar actividades para el maestro
+                if (usuario.comunidad_id) {
+                    await cargarActividadesMaestro(usuario.comunidad_id);
+                }
+                
+            } catch (error) {
+                console.error('Error cargando dashboard maestro:', error);
+                conafeConfig.mostrarAlerta('Error al cargar datos del dashboard', 'danger');
+            }
+        }
+
+        async function cargarActividadesPendientes() {
+            try {
+                const snapshot = await conafeConfig.db.actividades
+                    .orderByChild('estado')
+                    .equalTo('pendiente')
+                    .limitToLast(5)
+                    .once('value');
+                
+                const actividadesList = document.getElementById('actividadesList');
+                
+                if (!snapshot.exists()) {
+                    actividadesList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <h4>No hay actividades pendientes</h4>
+                            <p>Todas las actividades están completadas</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(childSnapshot => {
+                    const actividad = childSnapshot.val();
+                    const fechaLimite = actividad.fecha_limite ? 
+                        new Date(actividad.fecha_limite).toLocaleDateString('es-MX') : 
+                        'Sin fecha límite';
+                    
+                    html += `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">${actividad.titulo}</div>
+                                <div class="activity-desc">${actividad.descripcion || 'Sin descripción'}</div>
+                                <div class="activity-time">
+                                    <i class="far fa-calendar"></i> Vence: ${fechaLimite}
+                                </div>
+                            </div>
+                            <div class="activity-badge badge-pending">Pendiente</div>
+                        </div>
+                    `;
+                });
+                
+                actividadesList.innerHTML = html;
+                
+                // Actualizar contador de pendientes
+                document.getElementById('pendientes').textContent = snapshot.numChildren();
+                document.getElementById('badgeActividades').textContent = snapshot.numChildren();
+                
+            } catch (error) {
+                console.error('Error cargando actividades:', error);
+            }
+        }
+
+        async function cargarAsistenciasRecientes() {
+            try {
+                const snapshot = await conafeConfig.db.asistencias
+                    .orderByChild('fecha')
+                    .limitToLast(5)
+                    .once('value');
+                
+                const asistenciasList = document.getElementById('asistenciasRecientes');
+                
+                if (!snapshot.exists()) {
+                    asistenciasList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h4>No hay asistencias recientes</h4>
+                            <p>Los registros de asistencia aparecerán aquí</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Convertir a array y ordenar por fecha
+                const asistenciasArray = [];
+                snapshot.forEach(childSnapshot => {
+                    const asistencia = childSnapshot.val();
+                    asistencia.id = childSnapshot.key;
+                    asistenciasArray.push(asistencia);
+                });
+                
+                asistenciasArray.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
+                let html = '';
+                asistenciasArray.forEach(asistencia => {
+                    const fecha = asistencia.fecha ? 
+                        new Date(asistencia.fecha).toLocaleTimeString('es-MX', {hour12: false}) : 
+                        'Hora no especificada';
+                    
+                    const tipoIcon = asistencia.tipo === 'entrada' ? 
+                        '<i class="fas fa-sign-in-alt text-success"></i>' : 
+                        '<i class="fas fa-sign-out-alt text-danger"></i>';
+                    
+                    html += `
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${asistencia.usuario_nombre || 'Usuario'}</h6>
+                                    <p class="mb-1 small text-muted">${asistencia.ubicacion_declarada || 'Sin ubicación'}</p>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">${fecha}</small>
+                                    <span>${tipoIcon}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                asistenciasList.innerHTML = html;
+                
+                // Actualizar badge
+                document.getElementById('badgeAsistencias').textContent = asistenciasArray.length;
+                
+            } catch (error) {
+                console.error('Error cargando asistencias:', error);
+            }
+        }
+
+        async function cargarRegistrosRecientes() {
+            try {
+                const snapshot = await conafeConfig.db.usuarios
+                    .orderByChild('creado_en')
+                    .limitToLast(5)
+                    .once('value');
+                
+                const registrosList = document.getElementById('registrosRecientes');
+                
+                if (!snapshot.exists()) {
+                    registrosList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <h4>No hay registros recientes</h4>
+                            <p>Los nuevos usuarios aparecerán aquí</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Convertir a array y ordenar por fecha
+                const usuariosArray = [];
+                snapshot.forEach(childSnapshot => {
+                    const usuario = childSnapshot.val();
+                    usuario.id = childSnapshot.key;
+                    usuariosArray.push(usuario);
+                });
+                
+                usuariosArray.sort((a, b) => b.creado_en - a.creado_en);
+                
+                let html = '';
+                usuariosArray.forEach(usuario => {
+                    const fecha = usuario.creado_en ? 
+                        new Date(usuario.creado_en).toLocaleDateString('es-MX') : 
+                        'Fecha no especificada';
+                    
+                    const rolIcon = usuario.rol === 'maestro' ? 
+                        '<i class="fas fa-user-graduate text-primary"></i>' : 
+                        '<i class="fas fa-user-tie text-warning"></i>';
+                    
+                    html += `
+                        <div class="user-item">
+                            <div class="user-avatar-small">
+                                ${rolIcon}
+                            </div>
+                            <div class="user-info-small">
+                                <h5>${usuario.nombre}</h5>
+                                <p>${usuario.email || 'Sin email'}</p>
+                                <small class="text-muted">Registrado: ${fecha}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                registrosList.innerHTML = html;
+                
+                // Actualizar badge
+                document.getElementById('badgeUsuarios').textContent = usuariosArray.length;
+                
+            } catch (error) {
+                console.error('Error cargando registros:', error);
+            }
+        }
+
+        async function cargarActividadesMaestro(comunidadId) {
+            try {
+                const snapshot = await conafeConfig.db.actividades
+                    .orderByChild('comunidad_id')
+                    .equalTo(comunidadId)
+                    .limitToLast(3)
+                    .once('value');
+                
+                const actividadesList = document.getElementById('actividadesList');
+                
+                if (!snapshot.exists()) {
+                    actividadesList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <h4>No hay actividades asignadas</h4>
+                            <p>Las actividades de tu comunidad aparecerán aquí</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(childSnapshot => {
+                    const actividad = childSnapshot.val();
+                    const fechaLimite = actividad.fecha_limite ? 
+                        new Date(actividad.fecha_limite).toLocaleDateString('es-MX') : 
+                        'Sin fecha límite';
+                    
+                    const estadoBadge = actividad.estado === 'pendiente' ? 
+                        'badge-pending' : 'badge-completed';
+                    
+                    const estadoTexto = actividad.estado === 'pendiente' ? 'Pendiente' : 'Completado';
+                    
+                    html += `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">${actividad.titulo}</div>
+                                <div class="activity-desc">${actividad.descripcion || 'Sin descripción'}</div>
+                                <div class="activity-time">
+                                    <i class="far fa-calendar"></i> Vence: ${fechaLimite}
+                                </div>
+                            </div>
+                            <div class="activity-badge ${estadoBadge}">${estadoTexto}</div>
+                        </div>
+                    `;
+                });
+                
+                actividadesList.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error cargando actividades del maestro:', error);
+            }
+        }
+
+        function actualizarBadgesNavegacion(comunidadesSnapshot, usuariosSnapshot, asistenciasSnapshot) {
+            // Contar comunidades activas
+            let comunidadesActivas = 0;
+            comunidadesSnapshot.forEach(childSnapshot => {
+                const comunidad = childSnapshot.val();
+                if (comunidad.activa !== false) {
+                    comunidadesActivas++;
+                }
+            });
+            document.getElementById('badgeComunidades').textContent = comunidadesActivas;
+            
+            // Contar usuarios activos
+            let usuariosActivos = 0;
+            usuariosSnapshot.forEach(childSnapshot => {
+                const usuario = childSnapshot.val();
+                if (usuario.activo !== false) {
+                    usuariosActivos++;
+                }
+            });
+            document.getElementById('badgeUsuarios').textContent = usuariosActivos;
+            
+            // Contar asistencias hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            let asistenciasHoy = 0;
+            asistenciasSnapshot.forEach(childSnapshot => {
+                const asistencia = childSnapshot.val();
+                if (asistencia.fecha && asistencia.fecha.includes(hoy)) {
+                    asistenciasHoy++;
+                }
+            });
+            document.getElementById('badgeAsistencias').textContent = asistenciasHoy;
+        }
+
+        function configurarEventosDashboard() {
+            // Botón de cerrar sesión
+            document.getElementById('btnCerrarSesion').addEventListener('click', function(e) {
+                e.preventDefault();
+                conafeConfig.cerrarSesion();
+            });
+            
+            // Botón de exportar reporte
+            window.exportarReporte = function() {
+                conafeConfig.mostrarAlerta('Generando reporte... Esta función está en desarrollo.', 'info');
+                // Aquí iría la lógica para exportar un reporte
+            };
+            
+            // Actualizar fecha cada minuto
+            setInterval(actualizarFecha, 60000);
+        }
+
+        function iniciarEscuchadoresRealtime() {
+            // Escuchar cambios en comunidades
+            conafeConfig.db.comunidades.on('value', (snapshot) => {
+                document.getElementById('totalComunidades').textContent = snapshot.numChildren();
+                document.getElementById('badgeComunidades').textContent = snapshot.numChildren();
+            });
+            
+            // Escuchar cambios en usuarios
+            conafeConfig.db.usuarios.on('value', (snapshot) => {
+                document.getElementById('totalUsuarios').textContent = snapshot.numChildren();
+                document.getElementById('badgeUsuarios').textContent = snapshot.numChildren();
+            });
+            
+            // Escuchar nuevas asistencias
+            conafeConfig.db.asistencias.limitToLast(1).on('child_added', (snapshot) => {
+                // Actualizar contador de asistencias hoy
+                const hoy = new Date().toISOString().split('T')[0];
+                const asistencia = snapshot.val();
+                if (asistencia.fecha && asistencia.fecha.includes(hoy)) {
+                    const actual = parseInt(document.getElementById('asistenciasHoy').textContent) || 0;
+                    document.getElementById('asistenciasHoy').textContent = actual + 1;
+                    document.getElementById('badgeAsistencias').textContent = actual + 1;
+                }
+            });
+            
+            // Actualizar última actualización
+            document.getElementById('lastUpdate').textContent = 
+                new Date().toLocaleTimeString('es-MX', {hour12: false});
+            setInterval(() => {
+                document.getElementById('lastUpdate').textContent = 
+                    new Date().toLocaleTimeString('es-MX', {hour12: false});
+            }, 60000);
+        }
+
+        // Inicializar tooltips de Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>
