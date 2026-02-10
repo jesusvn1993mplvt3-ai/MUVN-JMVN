@@ -4,264 +4,324 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CONAFE - Gestión de Usuarios</title>
+    
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="admin.css">
+    
+    <style>
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            border: none;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+        }
+        
+        .badge-online {
+            background-color: #28a745;
+        }
+        
+        .badge-offline {
+            background-color: #6c757d;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #0066cc;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-primary shadow">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">
+            <a class="navbar-brand" href="dashboard.html">
                 <i class="fas fa-arrow-left me-2"></i>
-                <strong>CONAFE</strong> / Gestión de Usuarios
+                <strong>CONAFE</strong> - Usuarios
             </a>
+            <div class="d-flex">
+                <a href="registro-movil.html" class="btn btn-light me-2">
+                    <i class="fas fa-user-plus me-1"></i> Nuevo Usuario
+                </a>
+                <a href="dashboard.html" class="btn btn-outline-light">
+                    <i class="fas fa-home me-1"></i> Dashboard
+                </a>
+            </div>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <div class="container-fluid mt-4">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-filter"></i> Filtros y Acciones
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="fas fa-users me-2"></i> Gestión de Usuarios</h3>
+                        <p class="mb-0 opacity-75">Administra maestros y responsables del sistema</p>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Filtrar por Rol:</label>
-                            <select class="form-select" id="filtroRol">
-                                <option value="todos">Todos los roles</option>
-                                <option value="maestro">Maestros</option>
-                                <option value="responsable">Responsables</option>
-                                <option value="administrador">Administradores</option>
-                            </select>
+                        <!-- Filtros -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Filtrar por rol:</label>
+                                <select class="form-select" id="filtroRol">
+                                    <option value="todos">Todos los roles</option>
+                                    <option value="maestro">Maestros</option>
+                                    <option value="responsable">Responsables</option>
+                                    <option value="admin">Administradores</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Filtrar por estado:</label>
+                                <select class="form-select" id="filtroEstado">
+                                    <option value="todos">Todos los estados</option>
+                                    <option value="activo">Activos</option>
+                                    <option value="inactivo">Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Buscar:</label>
+                                <input type="text" class="form-control" id="buscarUsuario" placeholder="Nombre, email o teléfono...">
+                            </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Filtrar por Estado:</label>
-                            <select class="form-select" id="filtroEstado">
-                                <option value="todos">Todos los estados</option>
-                                <option value="activo">Activos</option>
-                                <option value="inactivo">Inactivos</option>
-                                <option value="pendiente">Pendientes</option>
-                            </select>
+                        <!-- Tabla de usuarios -->
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaUsuarios">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Rol</th>
+                                        <th>Comunidad</th>
+                                        <th>Teléfono</th>
+                                        <th>Estado</th>
+                                        <th>Registro</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usuariosList">
+                                    <!-- Los usuarios se cargarán aquí -->
+                                </tbody>
+                            </table>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Filtrar por Comunidad:</label>
-                            <select class="form-select" id="filtroComunidad">
-                                <option value="todos">Todas las comunidades</option>
-                                <!-- Se llenará dinámicamente -->
-                            </select>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" onclick="aplicarFiltros()">
-                                <i class="fas fa-filter"></i> Aplicar Filtros
-                            </button>
-                            <button class="btn btn-success" onclick="abrirModalNuevoUsuario()">
-                                <i class="fas fa-user-plus"></i> Nuevo Usuario
-                            </button>
-                            <button class="btn btn-warning" onclick="exportarUsuariosExcel()">
-                                <i class="fas fa-file-excel"></i> Exportar a Excel
-                            </button>
-                            <button class="btn btn-info" onclick="importarUsuariosCSV()">
-                                <i class="fas fa-file-import"></i> Importar desde CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card mt-3">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-chart-pie"></i> Estadísticas
-                    </div>
-                    <div class="card-body">
-                        <div id="estadisticasUsuarios">
-                            Cargando estadísticas...
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-9">
-                <div class="card">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-users"></i> Lista de Usuarios
-                            <span class="badge bg-primary ms-2" id="contadorUsuarios">0</span>
-                        </h4>
-                        <div class="input-group" style="width: 300px;">
-                            <input type="text" class="form-control" placeholder="Buscar usuario..." id="buscarUsuario">
-                            <button class="btn btn-outline-primary" type="button" onclick="buscarUsuarios()">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover" id="tablaUsuariosCompleta">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre Completo</th>
-                                    <th>Rol</th>
-                                    <th>Comunidad/Comunidades</th>
-                                    <th>Contacto</th>
-                                    <th>Estado</th>
-                                    <th>Última Actividad</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyUsuarios">
-                                <tr><td colspan="8" class="text-center">Cargando usuarios...</td></tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para Nuevo/Editar Usuario -->
-    <div class="modal fade" id="modalUsuario" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalUsuarioTitulo">
-                        <i class="fas fa-user-plus"></i> Nuevo Usuario
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formUsuario">
-                        <input type="hidden" id="usuarioId">
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Nombre Completo *</label>
-                                    <input type="text" class="form-control" id="nombreUsuario" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Correo Electrónico *</label>
-                                    <input type="email" class="form-control" id="emailUsuario" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-control" id="telefonoUsuario">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Rol *</label>
-                                    <select class="form-select" id="rolUsuario" required onchange="cambiarCamposRol()">
-                                        <option value="">Selecciona un rol</option>
-                                        <option value="maestro">Maestro</option>
-                                        <option value="responsable">Responsable</option>
-                                        <option value="administrador">Administrador</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row" id="camposMaestro" style="display: none;">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Comunidad Asignada *</label>
-                                    <select class="form-select" id="comunidadMaestro">
-                                        <option value="">Selecciona una comunidad</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Escuela</label>
-                                    <input type="text" class="form-control" id="escuelaMaestro" 
-                                           placeholder="Nombre de la escuela">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row" id="camposResponsable" style="display: none;">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Comunidades a Supervisar *</label>
-                                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px;">
-                                        <div id="checklistComunidades">
-                                            Cargando comunidades...
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Contraseña *</label>
-                                    <input type="password" class="form-control" id="passwordUsuario" required>
-                                    <small class="text-muted">Mínimo 6 caracteres</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Confirmar Contraseña *</label>
-                                    <input type="password" class="form-control" id="confirmPassword" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Fecha de Ingreso</label>
-                                    <input type="date" class="form-control" id="fechaIngreso">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Estado</label>
-                                    <select class="form-select" id="estadoUsuario">
-                                        <option value="activo">Activo</option>
-                                        <option value="inactivo">Inactivo</option>
-                                        <option value="pendiente">Pendiente</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="observacionesUsuario" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
-                        <i class="fas fa-save"></i> Guardar Usuario
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
 
     <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery & DataTables -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="admin.js"></script>
-    <script src="usuarios.js"></script>
+    
+    <!-- Configuración -->
+    <script src="config.js"></script>
+    
+    <!-- Script para usuarios -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticación
+            const usuario = conafeConfig.verificarAutenticacion();
+            if (!usuario) return;
+            
+            // Cargar usuarios
+            cargarUsuarios();
+            
+            // Configurar eventos
+            document.getElementById('filtroRol').addEventListener('change', cargarUsuarios);
+            document.getElementById('filtroEstado').addEventListener('change', cargarUsuarios);
+            document.getElementById('buscarUsuario').addEventListener('input', cargarUsuarios);
+        });
+        
+        async function cargarUsuarios() {
+            try {
+                const snapshot = await conafeConfig.db.usuarios.once('value');
+                const usuariosList = document.getElementById('usuariosList');
+                
+                if (!snapshot.exists()) {
+                    usuariosList.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No hay usuarios registrados en el sistema
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(childSnapshot => {
+                    const usuario = childSnapshot.val();
+                    usuario.id = childSnapshot.key;
+                    
+                    // Aplicar filtros
+                    const filtroRol = document.getElementById('filtroRol').value;
+                    const filtroEstado = document.getElementById('filtroEstado').value;
+                    const busqueda = document.getElementById('buscarUsuario').value.toLowerCase();
+                    
+                    if (filtroRol !== 'todos' && usuario.rol !== filtroRol) return;
+                    
+                    if (filtroEstado === 'activo' && usuario.activo === false) return;
+                    if (filtroEstado === 'inactivo' && usuario.activo !== false) return;
+                    
+                    if (busqueda && 
+                        !usuario.nombre.toLowerCase().includes(busqueda) &&
+                        !usuario.email.toLowerCase().includes(busqueda) &&
+                        !usuario.telefono.includes(busqueda)) {
+                        return;
+                    }
+                    
+                    // Formatear datos
+                    const fechaRegistro = usuario.creado_en ? 
+                        new Date(usuario.creado_en).toLocaleDateString('es-MX') : 
+                        'No especificada';
+                    
+                    const rolBadge = usuario.rol === 'maestro' ? 
+                        '<span class="badge bg-primary">Maestro</span>' : 
+                        usuario.rol === 'responsable' ? 
+                        '<span class="badge bg-warning">Responsable</span>' : 
+                        '<span class="badge bg-danger">Admin</span>';
+                    
+                    const estadoBadge = usuario.activo === false ? 
+                        '<span class="badge bg-danger">Inactivo</span>' : 
+                        '<span class="badge bg-success">Activo</span>';
+                    
+                    let comunidadInfo = 'Sin comunidad';
+                    if (usuario.comunidad_nombre) {
+                        comunidadInfo = usuario.comunidad_nombre;
+                    } else if (usuario.comunidades && usuario.comunidades.length > 0) {
+                        comunidadInfo = `${usuario.comunidades.length} comunidades`;
+                    }
+                    
+                    // Obtener iniciales para avatar
+                    const iniciales = usuario.nombre ? 
+                        usuario.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 
+                        '??';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        ${iniciales}
+                                    </div>
+                                    <div>
+                                        <strong>${usuario.nombre}</strong><br>
+                                        <small class="text-muted">${usuario.email || 'Sin email'}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${rolBadge}</td>
+                            <td>${comunidadInfo}</td>
+                            <td>${usuario.telefono || 'No especificado'}</td>
+                            <td>${estadoBadge}</td>
+                            <td>${fechaRegistro}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="verUsuario('${usuario.id}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning me-1" onclick="editarUsuario('${usuario.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuario('${usuario.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                usuariosList.innerHTML = html || `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-search me-2"></i>
+                                No se encontraron usuarios con los filtros aplicados
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                conafeConfig.mostrarAlerta('Error al cargar usuarios', 'danger');
+            }
+        }
+        
+        function verUsuario(id) {
+            window.location.href = `detalles-usuario.html?id=${id}`;
+        }
+        
+        function editarUsuario(id) {
+            conafeConfig.mostrarAlerta('Función de edición en desarrollo', 'info');
+        }
+        
+        async function eliminarUsuario(id) {
+            if (!confirm('¿Estás seguro de desactivar este usuario? El usuario no podrá acceder al sistema.')) {
+                return;
+            }
+            
+            try {
+                await conafeConfig.db.usuarios.child(id).update({
+                    activo: false,
+                    actualizado_en: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                conafeConfig.mostrarAlerta('Usuario desactivado exitosamente', 'success');
+                cargarUsuarios();
+                
+            } catch (error) {
+                console.error('Error desactivando usuario:', error);
+                conafeConfig.mostrarAlerta('Error al desactivar usuario', 'danger');
+            }
+        }
+    </script>
 </body>
 </html>
