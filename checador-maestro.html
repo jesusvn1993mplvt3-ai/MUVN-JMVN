@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checador Maestro - CONAFE</title>
+    
+    <style>
+        /* Estilos CONAFE */
+        :root {
+            --conafe-azul: #0066cc;
+            --conafe-azul-oscuro: #004d99;
+            --conafe-verde: #28a745;
+            --conafe-amarillo: #ffc107;
+            --conafe-rojo: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), 
+                        url('https://www.gob.mx/cms/uploads/article/main_image/61730/conafe_logo.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .header h1 {
+            color: var(--conafe-azul-oscuro);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .user-card {
+            background: white;
+            padding: 25px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .user-info {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--conafe-azul) 0%, var(--conafe-azul-oscuro) 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+        
+        .user-details h3 {
+            color: var(--conafe-azul-oscuro);
+            margin-bottom: 5px;
+        }
+        
+        .user-details p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .badge-maestro {
+            background: rgba(0, 102, 204, 0.1);
+            color: var(--conafe-azul);
+        }
+        
+        .time-display {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid #e0e6ed;
+        }
+        
+        .current-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--conafe-azul-oscuro);
+            margin-bottom: 10px;
+        }
+        
+        .current-date {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .checkin-buttons {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .btn-checkin {
+            padding: 25px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-checkin:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-checkin:active {
+            transform: translateY(0);
+        }
+        
+        .btn-entrada {
+            background: linear-gradient(135deg, var(--conafe-verde) 0%, #1e7e34 100%);
+            color: white;
+        }
+        
+        .btn-salida {
+            background: linear-gradient(135deg, var(--conafe-rojo) 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .location-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .location-card h3 {
+            color: var(--conafe-azul-oscuro);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .coordinates {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .location-info i {
+            color: var(--conafe-azul);
+            font-size: 1.2rem;
+        }
+        
+        .recent-checkins {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .recent-checkins h3 {
+            color: var(--conafe-azul-oscuro);
+            margin-bottom: 15px;
+        }
+        
+        .checkin-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--conafe-verde);
+        }
+        
+        .checkin-item.salida {
+            border-left-color: var(--conafe-rojo);
+        }
+        
+        .checkin-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .checkin-entrada {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--conafe-verde);
+        }
+        
+        .checkin-salida {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--conafe-rojo);
+        }
+        
+        .checkin-details {
+            flex: 1;
+        }
+        
+        .checkin-time {
+            font-weight: 600;
+            color: var(--conafe-azul-oscuro);
+        }
+        
+        .checkin-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* Estados */
+        .status {
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status-activo {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--conafe-verde);
+            border: 2px solid var(--conafe-verde);
+        }
+        
+        .status-inactivo {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--conafe-rojo);
+            border: 2px solid var(--conafe-rojo);
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--conafe-azul);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>CONAFE - Sistema de Asistencia</h1>
+            <p>Registro de asistencia con geolocalización</p>
+        </div>
+        
+        <!-- Información del Maestro (ÚNICA por cada HTML) -->
+        <div class="user-card">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">
+                    <!-- Iniciales se generan automáticamente -->
+                </div>
+                <div class="user-details">
+                    <h3 id="userName">Juan Pérez García</h3>
+                    <p id="userComunidad">Comunidad: San Juan de la Montaña</p>
+                    <p id="userMunicipio">Municipio: Yuriria, Guanajuato</p>
+                    <span class="badge badge-maestro" id="userRole">Maestro</span>
+                </div>
+            </div>
+            
+            <!-- Estado actual -->
+            <div class="status status-activo" id="statusBox">
+                <i class="fas fa-check-circle"></i> Listo para registrar asistencia
+            </div>
+            
+            <!-- Hora actual -->
+            <div class="time-display">
+                <div class="current-time" id="currentTime">00:00:00</div>
+                <div class="current-date" id="currentDate">lunes, 1 de enero de 2024</div>
+            </div>
+            
+            <!-- Botones de Entrada/Salida -->
+            <div class="checkin-buttons">
+                <button class="btn-checkin btn-entrada" id="btnEntrada" onclick="registrarEntrada()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>REGISTRAR ENTRADA</span>
+                </button>
+                
+                <button class="btn-checkin btn-salida" id="btnSalida" onclick="registrarSalida()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>REGISTRAR SALIDA</span>
+                </button>
+            </div>
+            
+            <!-- Ubicación -->
+            <div class="location-card">
+                <h3>
+                    <i class="fas fa-map-marker-alt"></i>
+                    Ubicación Actual
+                </h3>
+                <div class="coordinates" id="coordinates">
+                    Obteniendo ubicación GPS...
+                </div>
+                <div class="location-info">
+                    <i class="fas fa-crosshairs"></i>
+                    <span id="accuracy">Precisión: -- metros</span>
+                </div>
+                <div class="location-info">
+                    <i class="fas fa-satellite"></i>
+                    <span id="gpsStatus">Estado GPS: Obteniendo...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Últimos Registros -->
+        <div class="recent-checkins">
+            <h3>
+                <i class="fas fa-history"></i>
+                Últimos Registros
+            </h3>
+            <div id="recentCheckins">
+                <div class="checkin-item">
+                    <div class="checkin-icon checkin-entrada">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="checkin-details">
+                        <div class="checkin-time">08:15 AM</div>
+                        <div class="checkin-date">Hoy - Entrada registrada</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Sistema CONAFE © 2024 - ID: <span id="userId">MAESTRO_001</span></p>
+            <p>Última actualización: <span id="lastUpdate">--:--:--</span></p>
+        </div>
+    </div>
+
+    <!-- Script de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Configuración de Firebase (Firestore)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD03j-v-L3pckYW-GC2YfmKI3E08i1atx0",
+            authDomain: "conafe-muvn.firebaseapp.com",
+            projectId: "conafe-muvn",
+            storageBucket: "conafe-muvn.firebasestorage.app",
+            messagingSenderId: "149350241710",
+            appId: "1:149350241710:web:59a48078b4f1c4fa33643f"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // DATOS DEL MAESTRO (MODIFICAR ESTOS DATOS PARA CADA HTML)
+        const maestroData = {
+            id: 'MAESTRO_001', // CAMBIAR POR CADA MAESTRO
+            nombre: 'Juan Pérez García',
+            comunidad: 'San Juan de la Montaña',
+            municipio: 'Yuriria, Guanajuato',
+            rol: 'Maestro',
+            telefono: '4451234567',
+            email: 'juan.perez@conafe.edu.mx'
+        };
+
+        // Variables globales
+        let ubicacionActual = null;
+        let watchId = null;
+
+        // Inicializar cuando cargue la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos del maestro
+            cargarDatosMaestro();
+            
+            // Actualizar hora en tiempo real
+            actualizarHora();
+            setInterval(actualizarHora, 1000);
+            
+            // Iniciar geolocalización
+            iniciarGPS();
+            
+            // Cargar registros anteriores
+            cargarRegistrosAnteriores();
+            
+            // Actualizar última actualización
+            actualizarUltimaActualizacion();
+            setInterval(actualizarUltimaActualizacion, 60000);
+        });
+
+        function cargarDatosMaestro() {
+            // Mostrar datos en la interfaz
+            document.getElementById('userName').textContent = maestroData.nombre;
+            document.getElementById('userComunidad').textContent = `Comunidad: ${maestroData.comunidad}`;
+            document.getElementById('userMunicipio').textContent = `Municipio: ${maestroData.municipio}`;
+            document.getElementById('userRole').textContent = maestroData.rol;
+            document.getElementById('userId').textContent = maestroData.id;
+            
+            // Generar avatar con iniciales
+            const iniciales = maestroData.nombre
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            
+            document.getElementById('userAvatar').textContent = iniciales;
+        }
+
+        function actualizarHora() {
+            const ahora = new Date();
+            
+            // Hora
+            const hora = ahora.getHours().toString().padStart(2, '0');
+            const minutos = ahora.getMinutes().toString().padStart(2, '0');
+            const segundos = ahora.getSeconds().toString().padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hora}:${minutos}:${segundos}`;
+            
+            // Fecha
+            const opcionesFecha = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = 
+                ahora.toLocaleDateString('es-MX', opcionesFecha);
+        }
+
+        function iniciarGPS() {
+            if (!navigator.geolocation) {
+                document.getElementById('coordinates').textContent = 'GPS no soportado';
+                document.getElementById('gpsStatus').textContent = 'Estado GPS: No soportado';
+                return;
+            }
+
+            // Obtener ubicación inicial
+            navigator.geolocation.getCurrentPosition(
+                (posicion) => actualizarUbicacion(posicion),
+                (error) => manejarErrorGPS(error),
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+
+            // Monitoreo continuo
+            watchId = navigator.geolocation.watchPosition(
+                (posicion) => actualizarUbicacion(posicion),
+                (error) => console.error('Error GPS:', error),
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        }
+
+        function actualizarUbicacion(posicion) {
+            ubicacionActual = {
+                latitud: posicion.coords.latitude,
+                longitud: posicion.coords.longitude,
+                precision: posicion.coords.accuracy,
+                timestamp: posicion.timestamp
+            };
+
+            // Actualizar interfaz
+            document.getElementById('coordinates').textContent = 
+                `Lat: ${ubicacionActual.latitud.toFixed(6)}, Lng: ${ubicacionActual.longitud.toFixed(6)}`;
+            
+            document.getElementById('accuracy').textContent = 
+                `Precisión: ${ubicacionActual.precision.toFixed(1)} metros`;
+            
+            document.getElementById('gpsStatus').textContent = 
+                `Estado GPS: ${ubicacionActual.precision < 50 ? 'Precisa' : 'Aceptable'}`;
+            
+            // Actualizar estado
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status status-activo';
+            statusBox.innerHTML = '<i class="fas fa-check-circle"></i> GPS activo - Listo para registrar';
+        }
+
+        function manejarErrorGPS(error) {
+            let mensaje = 'Error de GPS';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensaje = 'GPS desactivado. Activa la ubicación.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    mensaje = 'Señal GPS débil.';
+                    break;
+                case error.TIMEOUT:
+                    mensaje = 'Tiempo de GPS agotado.';
+                    break;
+            }
+
+            document.getElementById('coordinates').textContent = mensaje;
+            document.getElementById('gpsStatus').textContent = 'Estado GPS: Error';
+            
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status status-inactivo';
+            statusBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
+        }
+
+        async function registrarEntrada() {
+            await registrarAsistencia('entrada', '¡Entrada registrada exitosamente!');
+        }
+
+        async function registrarSalida() {
+            await registrarAsistencia('salida', '¡Salida registrada exitosamente!');
+        }
+
+        async function registrarAsistencia(tipo, mensajeExito) {
+            // Verificar GPS
+            if (!ubicacionActual) {
+                alert('Esperando señal GPS...');
+                return;
+            }
+
+            // Deshabilitar botones temporalmente
+            const btnEntrada = document.getElementById('btnEntrada');
+            const btnSalida = document.getElementById('btnSalida');
+            btnEntrada.disabled = true;
+            btnSalida.disabled = true;
+
+            const textoOriginalEntrada = btnEntrada.innerHTML;
+            const textoOriginalSalida = btnSalida.innerHTML;
+
+            btnEntrada.innerHTML = '<span class="loading"></span> Registrando...';
+            btnSalida.innerHTML = '<span class="loading"></span> Registrando...';
+
+            try {
+                // Crear registro
+                const registro = {
+                    maestro_id: maestroData.id,
+                    maestro_nombre: maestroData.nombre,
+                    tipo: tipo,
+                    fecha: new Date().toISOString(),
+                    latitud: ubicacionActual.latitud,
+                    longitud: ubicacionActual.longitud,
+                    precision: ubicacionActual.precision,
+                    comunidad: maestroData.comunidad,
+                    municipio: maestroData.municipio,
+                    dispositivo: navigator.userAgent,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Guardar en Firestore
+                await db.collection('asistencias').add(registro);
+
+                // Mostrar éxito
+                alert(mensajeExito);
+                
+                // Agregar a lista de registros
+                agregarRegistroALista(registro);
+                
+                // Bloquear botones por 30 segundos (para evitar múltiples registros)
+                setTimeout(() => {
+                    btnEntrada.disabled = false;
+                    btnSalida.disabled = false;
+                    btnEntrada.innerHTML = textoOriginalEntrada;
+                    btnSalida.innerHTML = textoOriginalSalida;
+                }, 30000);
+
+            } catch (error) {
+                console.error('Error registrando:', error);
+                alert('Error al registrar. Intenta nuevamente.');
+                
+                // Rehabilitar botones
+                btnEntrada.disabled = false;
+                btnSalida.disabled = false;
+                btnEntrada.innerHTML = textoOriginalEntrada;
+                btnSalida.innerHTML = textoOriginalSalida;
+            }
+        }
+
+        async function cargarRegistrosAnteriores() {
+            try {
+                // Obtener registros de hoy
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                const snapshot = await db.collection('asistencias')
+                    .where('maestro_id', '==', maestroData.id)
+                    .where('fecha', '>=', hoy.toISOString())
+                    .orderBy('fecha', 'desc')
+                    .limit(5)
+                    .get();
+
+                const container = document.getElementById('recentCheckins');
+                
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>No hay registros hoy</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const registro = doc.data();
+                    html += crearElementoRegistro(registro);
+                });
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error cargando registros:', error);
+            }
+        }
+
+        function crearElementoRegistro(registro) {
+            const fecha = new Date(registro.fecha);
+            const hora = fecha.toLocaleTimeString('es-MX', {hour12: false}).substring(0, 5);
+            const tipo = registro.tipo;
+            const esEntrada = tipo === 'entrada';
+            
+            return `
+                <div class="checkin-item ${esEntrada ? '' : 'salida'}">
+                    <div class="checkin-icon ${esEntrada ? 'checkin-entrada' : 'checkin-salida'}">
+                        <i class="fas fa-${esEntrada ? 'sign-in-alt' : 'sign-out-alt'}"></i>
+                    </div>
+                    <div class="checkin-details">
+                        <div class="checkin-time">${hora} - ${tipo.toUpperCase()}</div>
+                        <div class="checkin-date">${fecha.toLocaleDateString('es-MX')}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function agregarRegistroALista(registro) {
+            const container = document.getElementById('recentCheckins');
+            const elemento = crearElementoRegistro(registro);
+            
+            // Insertar al inicio
+            if (container.children.length > 0 && 
+                container.children[0].className.includes('checkin-item')) {
+                container.insertAdjacentHTML('afterbegin', elemento);
+            } else {
+                container.innerHTML = elemento + container.innerHTML;
+            }
+            
+            // Limitar a 5 registros
+            const items = container.querySelectorAll('.checkin-item');
+            if (items.length > 5) {
+                items[5].remove();
+            }
+        }
+
+        function actualizarUltimaActualizacion() {
+            const ahora = new Date();
+            const hora = ahora.getHours().toString().padStart(2, '0');
+            const minutos = ahora.getMinutes().toString().padStart(2, '0');
+            const segundos = ahora.getSeconds().toString().padStart(2, '0');
+            document.getElementById('lastUpdate').textContent = `${hora}:${minutos}:${segundos}`;
+        }
+
+        // Limpiar watcher al salir
+        window.addEventListener('beforeunload', function() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        });
+    </script>
+</body>
+</html>
