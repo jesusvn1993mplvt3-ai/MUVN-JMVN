@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CONAFE - Registro Móvil</title>
+    
+    <!-- Material Design Lite para móvil -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* Header fijo */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            height: 60px;
+        }
+        
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 500;
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Contenido principal */
+        .app-content {
+            margin-top: 60px;
+            padding: 15px;
+            padding-bottom: 80px; /* Espacio para navegación inferior */
+        }
+        
+        /* Tabs de navegación */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+            background: none;
+            color: #666;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            color: #0066cc;
+        }
+        
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: #0066cc;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        /* Tarjetas de formulario */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .form-card:active {
+            transform: translateY(2px);
+        }
+        
+        .form-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #0066cc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-title i {
+            font-size: 1.4rem;
+        }
+        
+        /* Grupos de formulario */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        
+        .required::after {
+            content: ' *';
+            color: #d32f2f;
+        }
+        
+        /* Inputs estilizados */
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px 15px;
+            padding-left: 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fafafa;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #0066cc;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        /* Input con botón de acción */
+        .input-with-action {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-with-action .form-input {
+            padding-left: 15px;
+            flex: 1;
+        }
+        
+        .input-action-btn {
+            flex-shrink: 0;
+            width: 45px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        /* Selects personalizados */
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 14px 15px;
+            padding-right: 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fafafa;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #0066cc;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .select-arrow {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            pointer-events: none;
+        }
+        
+        /* Botones */
+        .btn-primary {
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary:active {
+            background: #e0e0e0;
+            transform: translateY(1px);
+        }
+        
+        /* Contenedor de botones flotante */
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .floating-btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .floating-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .floating-btn.primary {
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            color: white;
+        }
+        
+        .floating-btn.secondary {
+            background: white;
+            color: #0066cc;
+            border: 2px solid #0066cc;
+        }
+        
+        /* Alerta/Notificación */
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .alert.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+        
+        .alert.info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #1565c0;
+        }
+        
+        .alert.warning {
+            background: #fff3e0;
+            color: #ef6c00;
+            border-left: 4px solid #ef6c00;
+        }
+        
+        /* Lista de registros */
+        .registro-list {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .registro-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.2s ease;
+        }
+        
+        .registro-item:active {
+            background: #f8f8f8;
+        }
+        
+        .registro-item:last-child {
+            border-bottom: none;
+        }
+        
+        .registro-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .avatar-maestro {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+        
+        .avatar-responsable {
+            background: linear-gradient(135deg, #ff9800, #ef6c00);
+        }
+        
+        .registro-info {
+            flex: 1;
+            min-width: 0; /* Para que el texto no desborde */
+        }
+        
+        .registro-nombre {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 1.05rem;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .registro-detalle {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* Búsqueda */
+        .search-container {
+            position: sticky;
+            top: 75px;
+            z-index: 50;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            padding-left: 45px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 2px 12px rgba(0,102,204,0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        /* Carga */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Modal móvil */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        
+        .modal-container {
+            background: white;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 20px 20px 0 0;
+            overflow: hidden;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .modal-content {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Estados */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Adaptaciones para pantallas más grandes */
+        @media (min-width: 768px) {
+            .app-content {
+                max-width: 500px;
+                margin: 60px auto 0;
+            }
+            
+            .floating-buttons {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .modal-container {
+                max-width: 500px;
+                border-radius: 20px;
+                transform: translateY(0) scale(0.9);
+                transition: transform 0.3s ease;
+            }
+            
+            .modal-container.active {
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Scroll personalizado */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header de la aplicación -->
+    <div class="app-header">
+        <button class="mdl-button mdl-js-button mdl-button--icon" onclick="window.history.back()">
+            <i class="material-icons">arrow_back</i>
+        </button>
+        <h1 id="pageTitle">Registro Móvil</h1>
+        <button class="mdl-button mdl-js-button mdl-button--icon" onclick="mostrarAyuda()">
+            <i class="material-icons">help_outline</i>
+        </button>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="app-content">
+        <!-- Alertas dinámicas -->
+        <div id="alertsContainer"></div>
+        
+        <!-- Tabs de navegación -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="mostrarTab('registro')" id="tabRegistro">
+                <i class="material-icons">person_add</i>
+                <div>Nuevo Registro</div>
+            </button>
+            <button class="nav-tab" onclick="mostrarTab('lista')" id="tabLista">
+                <i class="material-icons">list</i>
+                <div>Ver Registrados</div>
+            </button>
+            <button class="nav-tab" onclick="mostrarTab('buscar')" id="tabBuscar">
+                <i class="material-icons">search</i>
+                <div>Buscar</div>
+            </button>
+        </div>
+
+        <!-- Sección de Nuevo Registro (activa por defecto) -->
+        <div id="seccionRegistro">
+            <div class="form-card">
+                <div class="form-title">
+                    <i class="material-icons">person_add</i>
+                    Nuevo Registro
+                </div>
+                
+                <!-- Tipo de usuario -->
+                <div class="form-group">
+                    <label class="form-label required">Tipo de Usuario</label>
+                    <div class="select-wrapper">
+                        <select class="form-select" id="tipoUsuario" onchange="cambiarTipoUsuario()">
+                            <option value="maestro">Maestro / Instructor</option>
+                            <option value="responsable">Responsable / Supervisor</option>
+                        </select>
+                        <i class="material-icons select-arrow">expand_more</i>
+                    </div>
+                </div>
+
+                <!-- Información básica -->
+                <div class="form-group">
+                    <label class="form-label required" for="nombreCompleto">Nombre Completo</label>
+                    <div class="input-wrapper">
+                        <i class="material-icons input-icon">person</i>
+                        <input type="text" class="form-input" id="nombreCompleto" 
+                               placeholder="Ej: Juan Pérez García" maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required" for="email">Correo Electrónico</label>
+                    <div class="input-wrapper">
+                        <i class="material-icons input-icon">email</i>
+                        <input type="email" class="form-input" id="email" 
+                               placeholder="ejemplo@correo.com" inputmode="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required" for="telefono">Teléfono</label>
+                    <div class="input-wrapper">
+                        <i class="material-icons input-icon">phone</i>
+                        <input type="tel" class="form-input" id="telefono" 
+                               placeholder="10 dígitos" inputmode="tel" maxlength="10">
+                    </div>
+                </div>
+
+                <!-- Campos específicos para maestros -->
+                <div id="camposMaestro">
+                    <div class="form-group">
+                        <label class="form-label required" for="comunidad">Comunidad Asignada</label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="comunidadMaestro">
+                                <option value="">Seleccionar comunidad...</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                            <i class="material-icons select-arrow">expand_more</i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="especialidad">Especialidad / Materias</label>
+                        <div class="input-wrapper">
+                            <i class="material-icons input-icon">school</i>
+                            <input type="text" class="form-input" id="especialidad" 
+                                   placeholder="Ej: Matemáticas, Español">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="grado">Grado / Nivel</label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="grado">
+                                <option value="">Seleccionar grado...</option>
+                                <option value="preescolar">Preescolar</option>
+                                <option value="primaria">Primaria</option>
+                                <option value="secundaria">Secundaria</option>
+                                <option value="bachillerato">Bachillerato</option>
+                            </select>
+                            <i class="material-icons select-arrow">expand_more</i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos específicos para responsables -->
+                <div id="camposResponsable" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Comunidades a Supervisar</label>
+                        <div class="input-with-action">
+                            <input type="text" class="form-input" id="nuevaComunidad" 
+                                   placeholder="Agregar comunidad...">
+                            <button class="input-action-btn" onclick="agregarComunidad()">
+                                <i class="material-icons">add</i>
+                            </button>
+                        </div>
+                        <div id="listaComunidades" style="margin-top: 10px;">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="zona">Zona Asignada</label>
+                        <div class="input-wrapper">
+                            <i class="material-icons input-icon">map</i>
+                            <input type="text" class="form-input" id="zona" 
+                                   placeholder="Ej: Zona Norte, Sector 3">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="vehiculo">Vehículo Asignado</label>
+                        <div class="input-wrapper">
+                            <i class="material-icons input-icon">directions_car</i>
+                            <input type="text" class="form-input" id="vehiculo" 
+                                   placeholder="Ej: Pickup blanca, Económica">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fecha de inicio -->
+                <div class="form-group">
+                    <label class="form-label required">Fecha de Inicio</label>
+                    <div class="input-wrapper">
+                        <i class="material-icons input-icon">calendar_today</i>
+                        <input type="date" class="form-input" id="fechaInicio">
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="form-group">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <div class="input-wrapper">
+                        <i class="material-icons input-icon">notes</i>
+                        <textarea class="form-input" id="observaciones" 
+                                  placeholder="Información adicional..." 
+                                  rows="3" style="resize: none;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Botón de registro -->
+                <button class="btn-primary" onclick="registrarUsuario()" id="btnRegistrar">
+                    <i class="material-icons">save</i>
+                    <span>Registrar Usuario</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección de Lista de Registrados -->
+        <div id="seccionLista" style="display: none;">
+            <!-- Filtros -->
+            <div class="form-card">
+                <div class="form-title">
+                    <i class="material-icons">filter_list</i>
+                    Filtros
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secondary" onclick="filtrarPorTipo('todos')" id="filtroTodos">
+                            <i class="material-icons">group</i>
+                            Todos
+                        </button>
+                        <button class="btn-secondary" onclick="filtrarPorTipo('maestro')" id="filtroMaestros">
+                            <i class="material-icons">person</i>
+                            Maestros
+                        </button>
+                        <button class="btn-secondary" onclick="filtrarPorTipo('responsable')" id="filtroResponsables">
+                            <i class="material-icons">supervisor_account</i>
+                            Responsables
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de usuarios -->
+            <div id="listaUsuarios">
+                <div class="empty-state">
+                    <i class="material-icons">group</i>
+                    <h3>No hay usuarios registrados</h3>
+                    <p>Los usuarios que registres aparecerán aquí</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Búsqueda -->
+        <div id="seccionBuscar" style="display: none;">
+            <div class="search-container">
+                <i class="material-icons search-icon">search</i>
+                <input type="text" class="search-input" id="inputBusqueda" 
+                       placeholder="Buscar por nombre, email o teléfono..." 
+                       oninput="buscarUsuarios()">
+            </div>
+
+            <div id="resultadosBusqueda">
+                <!-- Resultados aparecerán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones flotantes -->
+    <div class="floating-buttons">
+        <button class="floating-btn secondary" onclick="escanearQR()">
+            <i class="material-icons">qr_code_scanner</i>
+            Escanear QR
+        </button>
+        <button class="floating-btn primary" onclick="mostrarFormularioRapido()">
+            <i class="material-icons">add</i>
+            Rápido
+        </button>
+    </div>
+
+    <!-- Modal de Escaneo QR -->
+    <div class="modal-overlay" id="modalQR">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">Escanear Código QR</h2>
+                <button class="modal-close" onclick="cerrarModalQR()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="width: 250px; height: 250px; background: #f0f0f0; margin: 0 auto 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="material-icons" style="font-size: 80px; color: #999;">qr_code_scanner</i>
+                    </div>
+                    <p style="color: #666; margin-bottom: 20px;">Enfoca la cámara hacia el código QR del usuario</p>
+                    <button class="btn-secondary" onclick="activarCamara()">
+                        <i class="material-icons">camera_alt</i>
+                        Activar Cámara
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro Rápido -->
+    <div class="modal-overlay" id="modalRapido">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">Registro Rápido</h2>
+                <button class="modal-close" onclick="cerrarModalRapido()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-group">
+                    <label class="form-label required">Tipo</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn-secondary" onclick="seleccionarTipoRapido('maestro')" style="flex: 1;">
+                            <i class="material-icons">person</i>
+                            Maestro
+                        </button>
+                        <button class="btn-secondary" onclick="seleccionarTipoRapido('responsable')" style="flex: 1;">
+                            <i class="material-icons">supervisor_account</i>
+                            Responsable
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required" for="nombreRapido">Nombre</label>
+                    <input type="text" class="form-input" id="nombreRapido" placeholder="Nombre completo">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required" for="telefonoRapido">Teléfono</label>
+                    <input type="tel" class="form-input" id="telefonoRapido" placeholder="10 dígitos">
+                </div>
+
+                <div class="form-group" id="comunidadRapidoGroup">
+                    <label class="form-label" for="comunidadRapido">Comunidad</label>
+                    <select class="form-select" id="comunidadRapido">
+                        <option value="">Seleccionar...</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary" onclick="guardarRapido()" style="margin-top: 20px;">
+                    <i class="material-icons">save</i>
+                    Guardar Registro Rápido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD03j-v-L3pckYW-GC2YfmKI3E08i1atx0",
+            authDomain: "conafe-muvn.firebaseapp.com",
+            projectId: "conafe-muvn",
+            storageBucket: "conafe-muvn.firebasestorage.app",
+            messagingSenderId: "149350241710",
+            appId: "1:149350241710:web:59a48078b4f1c4fa33643f"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Variables globales
+        let comunidadesList = [];
+        let usuarioActual = null;
+        let usuariosRegistrados = [];
+        let filtroActivo = 'todos';
+        let tipoRapido = 'maestro';
+
+        // Inicializar aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarApp();
+        });
+
+        function inicializarApp() {
+            // Verificar autenticación
+            auth.onAuthStateChanged((user) => {
+                if (!user) {
+                    mostrarAlerta('Debes iniciar sesión para usar esta función', 'error');
+                    setTimeout(() => window.location.href = 'login-movil.html', 2000);
+                    return;
+                }
+                
+                usuarioActual = user;
+                cargarComunidades();
+                cargarUsuariosRegistrados();
+                
+                // Configurar fecha por defecto
+                document.getElementById('fechaInicio').valueAsDate = new Date();
+                
+                // Configurar eventos
+                configurarEventos();
+            });
+        }
+
+        function configurarEventos() {
+            // Validación en tiempo real
+            document.getElementById('telefono').addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '').substring(0, 10);
+            });
+
+            document.getElementById('telefonoRapido').addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '').substring(0, 10);
+            });
+
+            // Cerrar modal al tocar fuera
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function cargarComunidades() {
+            db.collection('comunidades')
+                .where('activa', '==', true)
+                .orderBy('nombre')
+                .get()
+                .then((snapshot) => {
+                    const selectMaestro = document.getElementById('comunidadMaestro');
+                    const selectRapido = document.getElementById('comunidadRapido');
+                    
+                    comunidadesList = [];
+                    snapshot.forEach(doc => {
+                        const comunidad = {
+                            id: doc.id,
+                            ...doc.data()
+                        };
+                        comunidadesList.push(comunidad);
+                        
+                        // Agregar opción a selects
+                        const option = document.createElement('option');
+                        option.value = comunidad.id;
+                        option.textContent = comunidad.nombre;
+                        selectMaestro.appendChild(option.cloneNode(true));
+                        selectRapido.appendChild(option);
+                    });
+                    
+                    if (comunidadesList.length === 0) {
+                        mostrarAlerta('No hay comunidades activas. Agrega comunidades primero.', 'warning');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error cargando comunidades:', error);
+                    mostrarAlerta('Error al cargar comunidades', 'error');
+                });
+        }
+
+        function cambiarTipoUsuario() {
+            const tipo = document.getElementById('tipoUsuario').value;
+            const camposMaestro = document.getElementById('camposMaestro');
+            const camposResponsable = document.getElementById('camposResponsable');
+            
+            if (tipo === 'maestro') {
+                camposMaestro.style.display = 'block';
+                camposResponsable.style.display = 'none';
+                document.getElementById('pageTitle').textContent = 'Registro de Maestro';
+            } else {
+                camposMaestro.style.display = 'none';
+                camposResponsable.style.display = 'block';
+                document.getElementById('pageTitle').textContent = 'Registro de Responsable';
+                actualizarListaComunidades();
+            }
+        }
+
+        function agregarComunidad() {
+            const input = document.getElementById('nuevaComunidad');
+            const nombre = input.value.trim();
+            
+            if (!nombre) {
+                mostrarAlerta('Ingresa el nombre de la comunidad', 'warning');
+                return;
+            }
+            
+            const lista = document.getElementById('listaComunidades');
+            const comunidadId = 'temp_' + Date.now();
+            
+            const chip = document.createElement('div');
+            chip.style.cssText = `
+                display: inline-flex;
+                align-items: center;
+                background: #e3f2fd;
+                color: #0066cc;
+                padding: 8px 12px;
+                border-radius: 20px;
+                margin: 4px;
+                font-size: 0.9rem;
+            `;
+            
+            chip.innerHTML = `
+                ${nombre}
+                <button onclick="removerComunidad('${comunidadId}')" 
+                        style="background: none; border: none; color: #0066cc; margin-left: 8px; cursor: pointer;">
+                    <i class="material-icons" style="font-size: 16px;">close</i>
+                </button>
+                <input type="hidden" name="comunidad" value="${nombre}" data-id="${comunidadId}">
+            `;
+            
+            lista.appendChild(chip);
+            input.value = '';
+            input.focus();
+        }
+
+        function removerComunidad(id) {
+            const chip = document.querySelector(`[data-id="${id}"]`).parentElement;
+            chip.remove();
+        }
+
+        function actualizarListaComunidades() {
+            // En una implementación real, esto obtendría las comunidades del responsable
+        }
+
+        function validarFormulario() {
+            const nombre = document.getElementById('nombreCompleto').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const tipo = document.getElementById('tipoUsuario').value;
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            
+            if (!nombre) {
+                mostrarAlerta('El nombre es obligatorio', 'error');
+                return false;
+            }
+            
+            if (!email) {
+                mostrarAlerta('El correo electrónico es obligatorio', 'error');
+                return false;
+            }
+            
+            if (!/^\S+@\S+\.\S+$/.test(email)) {
+                mostrarAlerta('Ingresa un correo electrónico válido', 'error');
+                return false;
+            }
+            
+            if (!telefono || telefono.length !== 10) {
+                mostrarAlerta('El teléfono debe tener 10 dígitos', 'error');
+                return false;
+            }
+            
+            if (!fechaInicio) {
+                mostrarAlerta('La fecha de inicio es obligatoria', 'error');
+                return false;
+            }
+            
+            if (tipo === 'maestro') {
+                const comunidad = document.getElementById('comunidadMaestro').value;
+                if (!comunidad) {
+                    mostrarAlerta('Selecciona una comunidad para el maestro', 'error');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        async function registrarUsuario() {
+            if (!validarFormulario()) return;
+            
+            const tipo = document.getElementById('tipoUsuario').value;
+            const datos = {
+                nombre: document.getElementById('nombreCompleto').value.trim(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                telefono: document.getElementById('telefono').value.trim(),
+                rol: tipo === 'maestro' ? 'maestro' : 'responsable',
+                fecha_inicio: document.getElementById('fechaInicio').value,
+                observaciones: document.getElementById('observaciones').value.trim(),
+                activo: true,
+                creado_por: usuarioActual.uid,
+                creado_en: new Date().toISOString()
+            };
+            
+            // Campos específicos por tipo
+            if (tipo === 'maestro') {
+                datos.comunidad_id = document.getElementById('comunidadMaestro').value;
+                datos.especialidad = document.getElementById('especialidad').value.trim();
+                datos.grado = document.getElementById('grado').value;
+                
+                // Obtener nombre de la comunidad
+                const comunidad = comunidadesList.find(c => c.id === datos.comunidad_id);
+                if (comunidad) {
+                    datos.comunidad_nombre = comunidad.nombre;
+                }
+            } else {
+                // Para responsables, obtener comunidades seleccionadas
+                const comunidades = Array.from(document.querySelectorAll('[name="comunidad"]'))
+                    .map(input => input.value.trim())
+                    .filter(val => val);
+                datos.comunidades = comunidades;
+                datos.zona = document.getElementById('zona').value.trim();
+                datos.vehiculo = document.getElementById('vehiculo').value.trim();
+            }
+            
+            try {
+                // Deshabilitar botón durante el registro
+                const btn = document.getElementById('btnRegistrar');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<div class="loading"></div> Registrando...';
+                btn.disabled = true;
+                
+                // Guardar en Firestore
+                const docRef = await db.collection('usuarios').add(datos);
+                
+                // Generar contraseña automática
+                const password = generarPassword();
+                
+                // Crear usuario en Firebase Auth (si es necesario)
+                try {
+                    await auth.createUserWithEmailAndPassword(datos.email, password);
+                    await db.collection('usuarios').doc(docRef.id).update({
+                        password_temporal: password,
+                        auth_uid: auth.currentUser?.uid || null
+                    });
+                    
+                    // Cerrar sesión del usuario temporal
+                    await auth.signOut();
+                    await auth.signInWithEmailAndPassword(usuarioActual.email, '***'); // Reautenticar
+                } catch (authError) {
+                    console.warn('Usuario no creado en Auth (puede que ya exista):', authError);
+                }
+                
+                // Mostrar éxito
+                mostrarAlerta(`Usuario registrado exitosamente! ID: ${docRef.id.slice(0, 8)}`, 'success');
+                
+                // Limpiar formulario
+                limpiarFormulario();
+                
+                // Recargar lista
+                cargarUsuariosRegistrados();
+                
+                // Mostrar credenciales
+                mostrarCredenciales(datos.email, password, datos.nombre);
+                
+            } catch (error) {
+                console.error('Error registrando usuario:', error);
+                mostrarAlerta(`Error al registrar: ${error.message}`, 'error');
+            } finally {
+                // Rehabilitar botón
+                const btn = document.getElementById('btnRegistrar');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function generarPassword() {
+            const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return password;
+        }
+
+        function mostrarCredenciales(email, password, nombre) {
+            const alerta = document.createElement('div');
+            alerta.className = 'alert info';
+            alerta.innerHTML = `
+                <i class="material-icons">vpn_key</i>
+                <div style="flex: 1;">
+                    <strong>Credenciales Generadas</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">
+                        <div>Usuario: <strong>${email}</strong></div>
+                        <div>Contraseña: <strong>${password}</strong></div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: #666;">
+                            <i class="material-icons" style="font-size: 14px; vertical-align: middle;">info</i>
+                            Anota estas credenciales para compartirlas
+                        </div>
+                    </div>
+                </div>
+                <button onclick="copiarCredenciales('${email}', '${password}')" 
+                        style="background: #0066cc; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer;">
+                    <i class="material-icons" style="font-size: 16px;">content_copy</i>
+                </button>
+            `;
+            
+            document.getElementById('alertsContainer').insertBefore(alerta, document.getElementById('alertsContainer').firstChild);
+            
+            // Auto-eliminar después de 30 segundos
+            setTimeout(() => {
+                if (alerta.parentNode) {
+                    alerta.style.opacity = '0';
+                    alerta.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alerta.remove(), 300);
+                }
+            }, 30000);
+        }
+
+        function copiarCredenciales(email, password) {
+            const texto = `Usuario: ${email}\nContraseña: ${password}`;
+            navigator.clipboard.writeText(texto)
+                .then(() => {
+                    mostrarAlerta('Credenciales copiadas al portapapeles', 'success');
+                })
+                .catch(err => {
+                    console.error('Error copiando:', err);
+                });
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('nombreCompleto').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('telefono').value = '';
+            document.getElementById('comunidadMaestro').value = '';
+            document.getElementById('especialidad').value = '';
+            document.getElementById('grado').value = '';
+            document.getElementById('zona').value = '';
+            document.getElementById('vehiculo').value = '';
+            document.getElementById('observaciones').value = '';
+            document.getElementById('listaComunidades').innerHTML = '';
+            document.getElementById('fechaInicio').valueAsDate = new Date();
+        }
+
+        async function cargarUsuariosRegistrados() {
+            try {
+                const snapshot = await db.collection('usuarios')
+                    .where('activo', '==', true)
+                    .orderBy('creado_en', 'desc')
+                    .limit(50)
+                    .get();
+                
+                usuariosRegistrados = [];
+                snapshot.forEach(doc => {
+                    usuariosRegistrados.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                actualizarListaUsuarios();
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                mostrarAlerta('Error al cargar usuarios registrados', 'error');
+            }
+        }
+
+        function actualizarListaUsuarios() {
+            const container = document.getElementById('listaUsuarios');
+            const usuariosFiltrados = filtrarUsuarios(usuariosRegistrados);
+            
+            if (usuariosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons">group</i>
+                        <h3>No hay usuarios registrados</h3>
+                        <p>Los usuarios que registres aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="registro-list">';
+            
+            usuariosFiltrados.forEach(usuario => {
+                const esMaestro = usuario.rol === 'maestro';
+                const fecha = new Date(usuario.creado_en).toLocaleDateString('es-MX');
+                const comunidad = esMaestro ? 
+                    (usuario.comunidad_nombre || 'Sin comunidad') : 
+                    (usuario.comunidades ? usuario.comunidades.join(', ') : 'Sin comunidades');
+                
+                html += `
+                    <div class="registro-item" onclick="verDetalleUsuario('${usuario.id}')">
+                        <div class="registro-avatar ${esMaestro ? 'avatar-maestro' : 'avatar-responsable'}">
+                            <i class="material-icons">${esMaestro ? 'person' : 'supervisor_account'}</i>
+                        </div>
+                        <div class="registro-info">
+                            <div class="registro-nombre">${usuario.nombre}</div>
+                            <div class="registro-detalle">
+                                <span><i class="material-icons" style="font-size: 14px;">email</i> ${usuario.email}</span>
+                                <span><i class="material-icons" style="font-size: 14px;">phone</i> ${usuario.telefono}</span>
+                                <span><i class="material-icons" style="font-size: 14px;">date_range</i> ${fecha}</span>
+                            </div>
+                            <div style="margin-top: 5px; font-size: 0.85rem; color: #666;">
+                                ${esMaestro ? '📚 ' : '👨‍💼 '} ${comunidad}
+                            </div>
+                        </div>
+                        <i class="material-icons" style="color: #999;">chevron_right</i>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function filtrarUsuarios(usuarios) {
+            if (filtroActivo === 'todos') return usuarios;
+            return usuarios.filter(u => u.rol === filtroActivo);
+        }
+
+        function filtrarPorTipo(tipo) {
+            filtroActivo = tipo;
+            
+            // Actualizar botones activos
+            document.getElementById('filtroTodos').classList.toggle('primary', tipo === 'todos');
+            document.getElementById('filtroMaestros').classList.toggle('primary', tipo === 'maestro');
+            document.getElementById('filtroResponsables').classList.toggle('primary', tipo === 'responsable');
+            
+            // Actualizar lista
+            actualizarListaUsuarios();
+        }
+
+        function buscarUsuarios() {
+            const termino = document.getElementById('inputBusqueda').value.toLowerCase().trim();
+            const resultados = document.getElementById('resultadosBusqueda');
+            
+            if (!termino) {
+                resultados.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons">search</i>
+                        <h3>Buscar usuarios</h3>
+                        <p>Escribe un nombre, email o teléfono para buscar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const encontrados = usuariosRegistrados.filter(u => 
+                u.nombre.toLowerCase().includes(termino) ||
+                u.email.toLowerCase().includes(termino) ||
+                u.telefono.includes(termino)
+            );
+            
+            if (encontrados.length === 0) {
+                resultados.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons">search_off</i>
+                        <h3>No se encontraron resultados</h3>
+                        <p>Intenta con otros términos de búsqueda</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="registro-list">';
+            
+            encontrados.forEach(usuario => {
+                const esMaestro = usuario.rol === 'maestro';
+                const fecha = new Date(usuario.creado_en).toLocaleDateString('es-MX');
+                
+                html += `
+                    <div class="registro-item" onclick="verDetalleUsuario('${usuario.id}')">
+                        <div class="registro-avatar ${esMaestro ? 'avatar-maestro' : 'avatar-responsable'}">
+                            <i class="material-icons">${esMaestro ? 'person' : 'supervisor_account'}</i>
+                        </div>
+                        <div class="registro-info">
+                            <div class="registro-nombre">${usuario.nombre}</div>
+                            <div class="registro-detalle">
+                                <span><i class="material-icons" style="font-size: 14px;">email</i> ${usuario.email}</span>
+                                <span><i class="material-icons" style="font-size: 14px;">phone</i> ${usuario.telefono}</span>
+                            </div>
+                        </div>
+                        <i class="material-icons" style="color: #999;">chevron_right</i>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            resultados.innerHTML = html;
+        }
+
+        function verDetalleUsuario(id) {
+            // En una implementación completa, esto abriría una página de detalles
+            const usuario = usuariosRegistrados.find(u => u.id === id);
+            if (usuario) {
+                const detalle = `
+                    Nombre: ${usuario.nombre}
+                    Email: ${usuario.email}
+                    Teléfono: ${usuario.telefono}
+                    Rol: ${usuario.rol === 'maestro' ? 'Maestro' : 'Responsable'}
+                    Fecha de registro: ${new Date(usuario.creado_en).toLocaleDateString('es-MX')}
+                    ${usuario.comunidad_nombre ? `Comunidad: ${usuario.comunidad_nombre}` : ''}
+                    ${usuario.comunidades ? `Comunidades: ${usuario.comunidades.join(', ')}` : ''}
+                `;
+                
+                mostrarAlerta(detalle, 'info');
+            }
+        }
+
+        function mostrarTab(tab) {
+            // Ocultar todas las secciones
+            document.getElementById('seccionRegistro').style.display = 'none';
+            document.getElementById('seccionLista').style.display = 'none';
+            document.getElementById('seccionBuscar').style.display = 'none';
+            
+            // Desactivar todas las tabs
+            document.getElementById('tabRegistro').classList.remove('active');
+            document.getElementById('tabLista').classList.remove('active');
+            document.getElementById('tabBuscar').classList.remove('active');
+            
+            // Mostrar sección seleccionada y activar tab
+            document.getElementById(`seccion${tab.charAt(0).toUpperCase() + tab.slice(1)}`).style.display = 'block';
+            document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+            
+            // Actualizar título
+            if (tab === 'registro') {
+                document.getElementById('pageTitle').textContent = 'Registro Móvil';
+            } else if (tab === 'lista') {
+                document.getElementById('pageTitle').textContent = 'Usuarios Registrados';
+            } else {
+                document.getElementById('pageTitle').textContent = 'Buscar Usuarios';
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            const container = document.getElementById('alertsContainer');
+            
+            const alerta = document.createElement('div');
+            alerta.className = `alert ${tipo}`;
+            
+            const iconos = {
+                success: 'check_circle',
+                error: 'error',
+                warning: 'warning',
+                info: 'info'
+            };
+            
+            alerta.innerHTML = `
+                <i class="material-icons">${iconos[tipo]}</i>
+                <div>${mensaje}</div>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; cursor: pointer;">
+                    <i class="material-icons">close</i>
+                </button>
+            `;
+            
+            container.appendChild(alerta);
+            
+            // Auto-eliminar después de 5 segundos
+            setTimeout(() => {
+                if (alerta.parentNode) {
+                    alerta.style.opacity = '0';
+                    alerta.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alerta.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function escanearQR() {
+            const modal = document.getElementById('modalQR');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.querySelector('.modal-container').style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function cerrarModalQR() {
+            const modal = document.getElementById('modalQR');
+            modal.querySelector('.modal-container').style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function activarCamara() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(function(stream) {
+                        mostrarAlerta('Cámara activada. Escanea el código QR.', 'success');
+                        // En una implementación real, aquí procesarías el QR
+                    })
+                    .catch(function(err) {
+                        mostrarAlerta('No se pudo acceder a la cámara: ' + err.message, 'error');
+                    });
+            } else {
+                mostrarAlerta('Tu dispositivo no soporta acceso a cámara', 'warning');
+            }
+        }
+
+        function mostrarFormularioRapido() {
+            tipoRapido = 'maestro';
+            const modal = document.getElementById('modalRapido');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.querySelector('.modal-container').style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function cerrarModalRapido() {
+            const modal = document.getElementById('modalRapido');
+            modal.querySelector('.modal-container').style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function seleccionarTipoRapido(tipo) {
+            tipoRapido = tipo;
+            const comunidadGroup = document.getElementById('comunidadRapidoGroup');
+            comunidadGroup.style.display = tipo === 'maestro' ? 'block' : 'none';
+        }
+
+        async function guardarRapido() {
+            const nombre = document.getElementById('nombreRapido').value.trim();
+            const telefono = document.getElementById('telefonoRapido').value.trim();
+            const comunidad = document.getElementById('comunidadRapido').value;
+            
+            if (!nombre || !telefono || telefono.length !== 10) {
+                mostrarAlerta('Completa todos los campos correctamente', 'error');
+                return;
+            }
+            
+            if (tipoRapido === 'maestro' && !comunidad) {
+                mostrarAlerta('Selecciona una comunidad para el maestro', 'error');
+                return;
+            }
+            
+            const datos = {
+                nombre: nombre,
+                telefono: telefono,
+                rol: tipoRapido,
+                fecha_inicio: new Date().toISOString().split('T')[0],
+                activo: true,
+                creado_por: usuarioActual.uid,
+                creado_en: new Date().toISOString(),
+                registro_rapido: true
+            };
+            
+            if (tipoRapido === 'maestro') {
+                datos.comunidad_id = comunidad;
+                // Obtener nombre de la comunidad
+                const comunidadObj = comunidadesList.find(c => c.id === comunidad);
+                if (comunidadObj) {
+                    datos.comunidad_nombre = comunidadObj.nombre;
+                }
+            }
+            
+            try {
+                await db.collection('usuarios').add(datos);
+                mostrarAlerta('Registro rápido guardado exitosamente', 'success');
+                cerrarModalRapido();
+                cargarUsuariosRegistrados();
+                
+                // Limpiar formulario rápido
+                document.getElementById('nombreRapido').value = '';
+                document.getElementById('telefonoRapido').value = '';
+                document.getElementById('comunidadRapido').value = '';
+                
+            } catch (error) {
+                console.error('Error en registro rápido:', error);
+                mostrarAlerta('Error al guardar registro rápido', 'error');
+            }
+        }
+
+        function mostrarAyuda() {
+            const ayuda = `
+                <strong>Instrucciones de Registro Móvil:</strong>
+                
+                1. <strong>Nuevo Registro:</strong> Completa todos los campos obligatorios (*) para registrar un nuevo usuario.
+                
+                2. <strong>Tipo de Usuario:</strong>
+                   • <strong>Maestro:</strong> Trabaja en una comunidad específica.
+                   • <strong>Responsable:</strong> Supervisa múltiples comunidades.
+                
+                3. <strong>Registro Rápido:</strong> Usa el botón "+ Rápido" para registrar solo nombre y teléfono.
+                
+                4. <strong>Escanear QR:</strong> Escanea códigos QR de usuarios existentes para ver su información.
+                
+                5. <strong>Buscar:</strong> Encuentra usuarios registrados por nombre, email o teléfono.
+                
+                <em>Nota: Todas las contraseñas se generan automáticamente y se muestran después del registro.</em>
+            `;
+            
+            mostrarAlerta(ayuda, 'info');
+        }
+
+        // Configurar enter para buscar
+        document.getElementById('inputBusqueda')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarUsuarios();
+            }
+        });
+
+        // Prevenir zoom en inputs
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('focus', function() {
+                setTimeout(() => {
+                    document.body.style.zoom = "100%";
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
